@@ -1,0 +1,15 @@
+builds:
+  - main: ./cmd/gk
+    binary: gk
+    ldflags: -s -w -X github.com/imorph/gate-keeper/pkg/version.REVISION={{.Commit}}
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+    env:
+      - CGO_ENABLED=0
+archives:
+  - name_template: "{{ .Binary }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - none*
