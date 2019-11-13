@@ -25,15 +25,13 @@ func run() error {
 	startTime := time.Now()
 
 	var cfg struct {
-		Srv struct {
-			APIhost  string `conf:"default:127.0.0.1:10001"`
-			LogLevel string `conf:"default:info"`
-		}
+		ListenHost string `conf:"default:127.0.0.1:10001"`
+		LogLevel   string `conf:"default:info"`
 	}
 
-	if err := conf.Parse(os.Args[1:], "GATE-KEEPER", &cfg); err != nil {
+	if err := conf.Parse(os.Args[1:], "GK", &cfg); err != nil {
 		if err == conf.ErrHelpWanted {
-			usage, err := conf.Usage("GATE-KEEPER", &cfg)
+			usage, err := conf.Usage("GK", &cfg)
 			if err != nil {
 				return errors.Wrap(err, "generating config usage")
 			}
@@ -44,7 +42,7 @@ func run() error {
 	}
 
 	// configure logging
-	logger, _ := initZap(cfg.Srv.LogLevel)
+	logger, _ := initZap(cfg.LogLevel)
 	defer func() {
 		err := logger.Sync()
 		if err != nil {
@@ -57,8 +55,8 @@ func run() error {
 
 	logger.Info("Application started",
 		zap.Duration("startup_duration", time.Since(startTime)),
-		zap.String("listen_address", cfg.Srv.APIhost),
-		zap.String("log_level", cfg.Srv.LogLevel),
+		zap.String("listen_address", cfg.ListenHost),
+		zap.String("log_level", cfg.LogLevel),
 		zap.String("app_name", version.GetAppName()),
 		zap.String("version", version.GetVersion()),
 		zap.String("revision", version.GetRevision()),

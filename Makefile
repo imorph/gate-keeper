@@ -19,3 +19,7 @@ test:
 build:
 		GO111MODULE=on CGO_ENABLED=0 go build  -ldflags "-s -w -X github.com/imorph/gate-keeper/pkg/version.REVISION=$(GIT_COMMIT) -X github.com/imorph/gate-keeper/pkg/version.APPNAME=$(NAME)" -a -o ./bin/gk ./cmd/gk/*
 #		GO111MODULE=on GIT_COMMIT=$(git rev-list -1 HEAD) && GO111MODULE=on CGO_ENABLED=0 go build  -ldflags "-s -w -X github.com/imorph/gate-keeper/pkg/version.REVISION=$(GIT_COMMIT) -X github.com/imorph/gate-keeper/pkg/version.APPNAME=$(CLI_NAME)" -a -o ./bin/gkcli ./cmd/gkcli/*
+
+release:
+		git tag $(VERSION)
+		git push origin $(VERSION)
