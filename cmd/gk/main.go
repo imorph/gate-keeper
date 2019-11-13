@@ -6,11 +6,12 @@ import (
 	"os"
 	"time"
 
-	"github.com/ardanlabs/conf"
-	"github.com/pkg/errors"
+	//"github.com/pkg/errors"
+	"github.com/spf13/pflag"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
+	"github.com/imorph/gate-keeper/pkg/signals"
 	"github.com/imorph/gate-keeper/pkg/version"
 )
 
@@ -24,31 +25,44 @@ func main() {
 func run() error {
 	startTime := time.Now()
 
+	// ==================
+	// Configuration
 	var cfg struct {
-		ListenHost string `conf:"default:127.0.0.1:10001"`
-		LogLevel   string `conf:"default:info"`
+		ListenHost string
+		LogLevel   string
 	}
 
-	if err := conf.Parse(os.Args[1:], "GK", &cfg); err != nil {
-		if err == conf.ErrHelpWanted {
-			usage, err := conf.Usage("GK", &cfg)
-			if err != nil {
-				return errors.Wrap(err, "generating config usage")
-			}
-			fmt.Println(usage)
-			return nil
-		}
-		return errors.Wrap(err, "parsing config")
+	// command line flags
+	pfs := pflag.NewFlagSet(version.GetAppName(), pflag.ContinueOnError)
+	pfs.StringVar(&cfg.ListenHost, "listen-host", "127.0.0.1:10001", "ip:port server will listen on")
+	pfs.StringVar(&cfg.LogLevel, "log-level", "info", "verbosity of logs, known levels are: debug, info, warn, error, fatal, panic")
+	versionFlag := pfs.BoolP("version", "v", false, "get version number")
+
+	// parse flags
+	err := pfs.Parse(os.Args[1:])
+	switch {
+	case err == pflag.ErrHelp:
+		os.Exit(0)
+	case err != nil:
+		pfs.PrintDefaults()
+		return err
+	case *versionFlag:
+		fmt.Printf("%s-%s\n", version.GetVersion(), version.GetRevision())
+		os.Exit(0)
 	}
 
+	// ==================
 	// configure logging
-	logger, _ := initZap(cfg.LogLevel)
+	logger, err := initZap(cfg.LogLevel)
+	if err != nil {
+		return err
+	}
 	defer func() {
 		err := logger.Sync()
 		if err != nil {
 			// may show "sync /dev/stderr: invalid argument" but this is ok?
 			// https://github.com/uber-go/zap/issues/328
-			logger.Sugar().Info("error syncing logger", err)
+			logger.Sugar().Warn("error syncing logger", err)
 		}
 	}()
 
@@ -64,9 +78,23 @@ func run() error {
 		zap.String("revision", version.GetRevision()),
 	)
 
+	sig := signals.WaitForSigterm()
+	sigtime := time.Now()
+
+	logger.Sugar().Info("OS signal received, stopping. ", "signal: ", sig)
+
+	logger.Info("Application stopped",
+		zap.Duration("stop_duration", time.Since(sigtime)),
+		zap.String("app_name", version.GetAppName()),
+		zap.String("version", version.GetVersion()),
+		zap.String("revision", version.GetRevision()),
+	)
+
 	return nil
 }
 
+//
+// zap initialisation logic
 func initZap(logLevel string) (*zap.Logger, error) {
 	level := zap.NewAtomicLevelAt(zapcore.InfoLevel)
 	switch logLevel {
