@@ -23,3 +23,4 @@ build:
 release:
 		git tag $(VERSION)
 		git push origin $(VERSION)
+		goreleaser
