@@ -46,7 +46,9 @@ func run() error {
 	defer func() {
 		err := logger.Sync()
 		if err != nil {
-			log.Println("error syncing logger", err)
+			// may show "sync /dev/stderr: invalid argument" but this is ok?
+			// https://github.com/uber-go/zap/issues/328
+			logger.Sugar().Info("error syncing logger", err)
 		}
 	}()
 
