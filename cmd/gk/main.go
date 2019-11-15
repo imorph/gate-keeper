@@ -11,6 +11,7 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
+	"github.com/imorph/gate-keeper/pkg/server"
 	"github.com/imorph/gate-keeper/pkg/signals"
 	"github.com/imorph/gate-keeper/pkg/version"
 )
@@ -28,14 +29,21 @@ func run() error {
 	// ==================
 	// Configuration
 	var cfg struct {
-		ListenHost string
-		LogLevel   string
+		ListenHost     string
+		LogLevel       string
+		LoginThreshold int
+		PassThreshold  int
+		IPThreshold    int
+		Logger         *zap.Logger
 	}
 
 	// command line flags
 	pfs := pflag.NewFlagSet(version.GetAppName(), pflag.ContinueOnError)
 	pfs.StringVar(&cfg.ListenHost, "listen-host", "127.0.0.1:10001", "ip:port server will listen on")
 	pfs.StringVar(&cfg.LogLevel, "log-level", "info", "verbosity of logs, known levels are: debug, info, warn, error, fatal, panic")
+	pfs.IntVar(&cfg.LoginThreshold, "max-login", 10, "Maximum alowed login attemps before ban")
+	pfs.IntVar(&cfg.PassThreshold, "max-pass", 100, "Maximum alowed login attemps with same password before ban")
+	pfs.IntVar(&cfg.IPThreshold, "max-ip", 1000, "Maximum alowed login attemps from single IP before ban")
 	versionFlag := pfs.BoolP("version", "v", false, "get version number")
 
 	// parse flags
@@ -53,23 +61,30 @@ func run() error {
 
 	// ==================
 	// configure logging
-	logger, err := initZap(cfg.LogLevel)
+	cfg.Logger, err = initZap(cfg.LogLevel)
 	if err != nil {
 		return err
 	}
 	defer func() {
-		err := logger.Sync()
+		err := cfg.Logger.Sync()
 		if err != nil {
 			// may show "sync /dev/stderr: invalid argument" but this is ok?
 			// https://github.com/uber-go/zap/issues/328
-			logger.Sugar().Warn("error syncing logger", err)
+			cfg.Logger.Sugar().Warn("error syncing logger", err)
 		}
 	}()
 
-	stdLog := zap.RedirectStdLog(logger)
+	stdLog := zap.RedirectStdLog(cfg.Logger)
 	defer stdLog()
 
-	logger.Info("Application started",
+	s := server.NewGateKeeperServer()
+
+	err = s.Start(cfg.ListenHost, cfg.Logger)
+	if err != nil {
+		return err
+	}
+
+	cfg.Logger.Info("Application started",
 		zap.Duration("startup_duration", time.Since(startTime)),
 		zap.String("listen_address", cfg.ListenHost),
 		zap.String("log_level", cfg.LogLevel),
@@ -79,11 +94,12 @@ func run() error {
 	)
 
 	sig := signals.WaitForSigterm()
+
+	//==========================
+	//stop sequence
 	sigtime := time.Now()
-
-	logger.Sugar().Info("OS signal received, stopping. ", "signal: ", sig)
-
-	logger.Info("Application stopped",
+	cfg.Logger.Sugar().Info("OS signal received, stopping. ", "signal: ", sig)
+	cfg.Logger.Info("Application stopped",
 		zap.Duration("stop_duration", time.Since(sigtime)),
 		zap.String("app_name", version.GetAppName()),
 		zap.String("version", version.GetVersion()),

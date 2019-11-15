@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+package gatekeeper;
+
+// The GateKeeper service definition.
+service GateKeeper {
+  // this will check login details and update associated counters
+  rpc Check (CheckRequest) returns (CheckReply) {}
+  // this will reset counters associated with derds from request
+  rpc Reset (ResetRequest) returns (ResetReply) {}
+  // add/delete network/ip in white-list, all requests from whitelisted networks are OK by default
+  // IMPORTANT: black-list have precedence over white-list, if network in both sets, requests will be banned
+  rpc WhiteList (WhiteListRequest) returns (WhiteListReply) {}
+  // add/delete network/ip in black-list, all requests from blacklisted networks are NOT OK
+  // IMPORTANT: black-list have precedence over white-list, if network in both sets, requests will be banned
+  rpc BlackList (BlackListRequest) returns (BlackListReply) {}
+}
+
+// The CHECK request message containing login details: login, password (hopefully hashed), IP
+message CheckRequest {
+  string login = 1;
+  string password = 2;
+  string ip = 3;
+}
+
+// The CHECK response message containing true or false
+message CheckReply {
+  bool ok = 1;
+}
+
+// The request RESET message containing: login, IP for wich we will reset counters
+message ResetRequest {
+    string login = 1;
+    string ip = 2;
+  }
+
+// The RESET response message containing true or false and possible error
+message ResetReply {
+    bool ok = 1;
+    string err = 2;
+  }
+
+// The WITELIST request message containing subnet in CIDR notation (RFC 4632 and RFC 4291): "IP/MASK" eg "192.0.2.0/24" 
+message WhiteListRequest {
+    string subnet = 1;
+    bool isadd = 2;
+  }
+
+// The WITELIST response message containing true or false and possible error
+message WhiteListReply {
+    bool ok = 1;
+    string err = 2;
+  }
+
+// The BLACKLIST request message containing subnet in CIDR notation (RFC 4632 and RFC 4291): "IP/MASK" eg "192.0.2.0/24" 
+message BlackListRequest {
+    string subnet = 1;
+    bool isadd = 2;
+  }
+
+// The WITELIST response message containing true or false and possible error
+message BlackListReply {
+    bool ok = 1;
+    string err = 2;
+  }
