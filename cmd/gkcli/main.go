@@ -5,9 +5,11 @@ import (
 	"log"
 	"os"
 
-	//"github.com/pkg/errors"
 	"github.com/spf13/pflag"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
 
+	"github.com/imorph/gate-keeper/pkg/api/gatekeeper"
 	"github.com/imorph/gate-keeper/pkg/version"
 )
 
@@ -42,5 +44,20 @@ func run() error {
 		fmt.Printf("%s-%s\n", version.GetVersion(), version.GetRevision())
 		os.Exit(0)
 	}
+
+	var conn *grpc.ClientConn
+	conn, err = grpc.Dial(cfg.ServerHost, grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("did not connect: %s", err)
+	}
+	defer conn.Close()
+
+	c := gatekeeper.NewGateKeeperClient(conn)
+	response, err := c.Check(context.Background(), &gatekeeper.CheckRequest{Login: "me", Password: "me1", Ip: "192.168.0.1"})
+	if err != nil {
+		log.Fatalf("Error when calling Check: %s", err)
+	}
+	log.Println("Response from server: ", response.Ok)
+
 	return nil
 }

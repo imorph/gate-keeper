@@ -13,16 +13,21 @@ import (
 )
 
 type GateKeeperServer struct {
+	listenHost string
+	logger     *zap.Logger
 }
 
-func NewGateKeeperServer() *GateKeeperServer {
-	return &GateKeeperServer{}
+func NewGateKeeperServer(listenHost string, logger *zap.Logger) *GateKeeperServer {
+	return &GateKeeperServer{
+		listenHost: listenHost,
+		logger:     logger,
+	}
 }
 
-func (s *GateKeeperServer) Start(listenHost string, logger *zap.Logger) error {
-	lis, err := net.Listen("tcp", listenHost)
+func (s *GateKeeperServer) Start() error {
+	lis, err := net.Listen("tcp", s.listenHost)
 	if err != nil {
-		logger.Fatal("Can not listen on", zap.String("host:port", listenHost), zap.Error(err))
+		s.logger.Fatal("Can not listen on", zap.String("host:port", s.listenHost), zap.Error(err))
 		return err
 	}
 	var opts []grpc.ServerOption
@@ -40,7 +45,7 @@ func (s *GateKeeperServer) Start(listenHost string, logger *zap.Logger) error {
 	// 	opts = []grpc.ServerOption{grpc.Creds(creds)}
 	// }
 	grpcServer := grpc.NewServer(opts...)
-	pb.RegisterGateKeeperServer(grpcServer, NewGateKeeperServer())
+	pb.RegisterGateKeeperServer(grpcServer, s)
 	err = grpcServer.Serve(lis)
 	if err != nil {
 		return err
@@ -49,6 +54,7 @@ func (s *GateKeeperServer) Start(listenHost string, logger *zap.Logger) error {
 }
 
 func (s *GateKeeperServer) Check(ctx context.Context, req *pb.CheckRequest) (*pb.CheckReply, error) {
+	s.logger.Warn("Method Check called for", zap.String("IP:", req.Ip), zap.String("Login", req.Login))
 	return nil, status.Errorf(codes.Unimplemented, "method Check not implemented")
 }
 

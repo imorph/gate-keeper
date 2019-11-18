@@ -77,12 +77,13 @@ func run() error {
 	stdLog := zap.RedirectStdLog(cfg.Logger)
 	defer stdLog()
 
-	s := server.NewGateKeeperServer()
-
-	err = s.Start(cfg.ListenHost, cfg.Logger)
-	if err != nil {
-		return err
-	}
+	go func() {
+		s := server.NewGateKeeperServer(cfg.ListenHost, cfg.Logger)
+		err = s.Start()
+		if err != nil {
+			cfg.Logger.Error("Error strting server", zap.Error(err))
+		}
+	}()
 
 	cfg.Logger.Info("Application started",
 		zap.Duration("startup_duration", time.Since(startTime)),
