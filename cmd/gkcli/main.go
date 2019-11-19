@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
-	"net"
+	//"net"
 	"os"
 
 	"github.com/spf13/pflag"
@@ -101,14 +101,14 @@ func run() error {
 		}
 		//cmdCheck.PrintDefaults()
 		//defaults.PrintDefaults()
-		_, _, err = net.SplitHostPort(cfg.ServerHost)
-		if err != nil {
-			log.Fatal(err)
-		}
-		ipTMP := net.ParseIP(*checkIP)
-		if ipTMP == nil {
-			log.Fatal(*checkIP, " is not valid IP")
-		}
+		// _, _, err = net.SplitHostPort(cfg.ServerHost)
+		// if err != nil {
+		// 	log.Fatal(err)
+		// }
+		// ipTMP := net.ParseIP(*checkIP)
+		// if ipTMP == nil {
+		// 	log.Fatal(*checkIP, " is not valid IP")
+		// }
 		fmt.Println("Will CHECK login attempt for", "Login:", *checkLogin, "Pass:", *checkPass, "IP:", *checkIP)
 	case "reset":
 		err := cmdReset.Parse(os.Args[2:])
@@ -117,14 +117,14 @@ func run() error {
 		}
 		//fmt.Println(*cmdReset)
 		//defaults.PrintDefaults()
-		_, _, err = net.SplitHostPort(cfg.ServerHost)
-		if err != nil {
-			log.Fatal(err)
-		}
-		ipTMP := net.ParseIP(*checkIP)
-		if ipTMP == nil {
-			log.Fatal(*resetIP, " is not valid IP")
-		}
+		// _, _, err = net.SplitHostPort(cfg.ServerHost)
+		// if err != nil {
+		// 	log.Fatal(err)
+		// }
+		// ipTMP := net.ParseIP(*checkIP)
+		// if ipTMP == nil {
+		// 	log.Fatal(*resetIP, " is not valid IP")
+		// }
 		fmt.Println("Will RESET login attempt counters for", "Login:", *resetLogin, "IP:", *resetIP)
 	case "white-list":
 		err := cmdWhiteList.Parse(os.Args[2:])
@@ -133,14 +133,14 @@ func run() error {
 		}
 		//cmdWhiteList.PrintDefaults()
 		//defaults.PrintDefaults()
-		_, _, err = net.SplitHostPort(cfg.ServerHost)
-		if err != nil {
-			log.Fatal(err)
-		}
-		_, _, err = net.ParseCIDR(*whiteListSubNet)
-		if err != nil {
-			log.Fatal(err)
-		}
+		// _, _, err = net.SplitHostPort(cfg.ServerHost)
+		// if err != nil {
+		// 	log.Fatal(err)
+		// }
+		// _, _, err = net.ParseCIDR(*whiteListSubNet)
+		// if err != nil {
+		// 	log.Fatal(err)
+		// }
 		fmt.Println("Will include/exclude from WHITE-LIST subnet", "Sub-Network:", *whiteListSubNet, "ADD:", *whiteListAdd)
 	case "black-list":
 		err := cmdBlackList.Parse(os.Args[2:])
@@ -149,14 +149,14 @@ func run() error {
 		}
 		//cmdBlackList.PrintDefaults()
 		//defaults.PrintDefaults()
-		_, _, err = net.SplitHostPort(cfg.ServerHost)
-		if err != nil {
-			log.Fatal(err)
-		}
-		_, _, err = net.ParseCIDR(*blackListSubNet)
-		if err != nil {
-			log.Fatal(err)
-		}
+		// _, _, err = net.SplitHostPort(cfg.ServerHost)
+		// if err != nil {
+		// 	log.Fatal(err)
+		// }
+		// _, _, err = net.ParseCIDR(*blackListSubNet)
+		// if err != nil {
+		// 	log.Fatal(err)
+		// }
 		fmt.Println("Will include/exclude from BLACK-LIST subnet", "Sub-Network:", *blackListSubNet, "ADD:", *blackListAdd)
 	default:
 		fmt.Printf("%q is not valid subcommand.\n", os.Args[1])
@@ -189,11 +189,11 @@ func run() error {
 	defer conn.Close()
 
 	c := gatekeeper.NewGateKeeperClient(conn)
-	response, err := c.Check(context.Background(), &gatekeeper.CheckRequest{Login: "me", Password: "me1", Ip: "192.168.0.1"})
+	reply, err := c.Check(context.Background(), &gatekeeper.CheckRequest{Login: *checkLogin, Password: *checkPass, Ip: *checkIP})
 	if err != nil {
-		log.Fatalf("Error when calling Check: %s", err)
+		log.Printf("Error when calling Check: %s", err)
 	}
-	log.Println("Response from server: ", response.Ok)
+	log.Println("Response from server: ", reply.GetOk())
 
 	return nil
 }
