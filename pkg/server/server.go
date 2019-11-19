@@ -55,15 +55,47 @@ func (s *GateKeeperServer) Start() error {
 
 func (s *GateKeeperServer) Check(ctx context.Context, req *pb.CheckRequest) (*pb.CheckReply, error) {
 	s.logger.Warn("Method Check called for", zap.String("IP:", req.Ip), zap.String("Login", req.Login))
-	return nil, status.Errorf(codes.Unimplemented, "method Check not implemented")
+	var rep *pb.CheckReply
+	ipTMP := net.ParseIP(req.Ip)
+	if ipTMP == nil {
+		rep.Ok = false
+		s.logger.Warn("Method Check ", zap.String("This is not walid IP:", req.Ip))
+		return rep, status.Errorf(codes.InvalidArgument, "IP address is malformed")
+	}
+	rep.Ok = true
+	return rep, nil
 }
 
 func (s *GateKeeperServer) Reset(ctx context.Context, req *pb.ResetRequest) (*pb.ResetReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Reset not implemented")
+	var rep *pb.ResetReply
+	ipTMP := net.ParseIP(req.Ip)
+	if ipTMP == nil {
+		rep.Ok = false
+		s.logger.Warn("Method Check ", zap.String("This is not walid IP:", req.Ip))
+		return rep, status.Errorf(codes.InvalidArgument, "IP address is malformed")
+	}
+	rep.Ok = true
+	return rep, nil
 }
 func (s *GateKeeperServer) WhiteList(ctx context.Context, req *pb.WhiteListRequest) (*pb.WhiteListReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method WhiteList not implemented")
+	var rep *pb.WhiteListReply
+	_, _, err := net.ParseCIDR(req.Subnet)
+	if err != nil {
+		rep.Ok = false
+		s.logger.Warn("Method Check ", zap.String("This is not walid Subnet:", req.Subnet))
+		return rep, status.Errorf(codes.InvalidArgument, "Subnet CIDR is malformed")
+	}
+	rep.Ok = true
+	return rep, nil
 }
 func (s *GateKeeperServer) BlackList(ctx context.Context, req *pb.BlackListRequest) (*pb.BlackListReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method BlackList not implemented")
+	var rep *pb.BlackListReply
+	_, _, err := net.ParseCIDR(req.Subnet)
+	if err != nil {
+		rep.Ok = false
+		s.logger.Warn("Method Check ", zap.String("This is not walid Subnet:", req.Subnet))
+		return rep, status.Errorf(codes.InvalidArgument, "Subnet CIDR is malformed")
+	}
+	rep.Ok = true
+	return rep, nil
 }
