@@ -72,6 +72,7 @@ func (s *GateKeeperServer) Check(ctx context.Context, req *pb.CheckRequest) (*pb
 }
 
 func (s *GateKeeperServer) Reset(ctx context.Context, req *pb.ResetRequest) (*pb.ResetReply, error) {
+	s.logger.Debug("Method Reset called for", zap.String("IP:", req.Ip), zap.String("Login", req.Login))
 	var rep *pb.ResetReply
 	ipTMP := net.ParseIP(req.Ip)
 	if ipTMP == nil {
@@ -81,12 +82,14 @@ func (s *GateKeeperServer) Reset(ctx context.Context, req *pb.ResetRequest) (*pb
 		s.logger.Warn("Method Check ", zap.String("This is not walid IP:", req.Ip))
 		return rep, status.Errorf(codes.InvalidArgument, "IP address is malformed")
 	}
+	s.logger.Debug("Method Reset successfully executed for", zap.String("IP:", req.Ip), zap.String("Login", req.Login))
 	rep = &pb.ResetReply{
 		Ok: true,
 	}
 	return rep, nil
 }
 func (s *GateKeeperServer) WhiteList(ctx context.Context, req *pb.WhiteListRequest) (*pb.WhiteListReply, error) {
+	s.logger.Debug("Method WhiteList called for", zap.String("IP:", req.Subnet), zap.Bool("Add to list", req.Isadd))
 	var rep *pb.WhiteListReply
 	_, _, err := net.ParseCIDR(req.Subnet)
 	if err != nil {
@@ -96,12 +99,14 @@ func (s *GateKeeperServer) WhiteList(ctx context.Context, req *pb.WhiteListReque
 		s.logger.Warn("Method Check ", zap.String("This is not walid Subnet:", req.Subnet))
 		return rep, status.Errorf(codes.InvalidArgument, "Subnet CIDR is malformed")
 	}
+	s.logger.Debug("Method WhiteList successfully executed for", zap.String("IP:", req.Subnet), zap.Bool("Add to list", req.Isadd))
 	rep = &pb.WhiteListReply{
 		Ok: true,
 	}
 	return rep, nil
 }
 func (s *GateKeeperServer) BlackList(ctx context.Context, req *pb.BlackListRequest) (*pb.BlackListReply, error) {
+	s.logger.Debug("Method BlackList called for", zap.String("IP:", req.Subnet), zap.Bool("Add to list", req.Isadd))
 	var rep *pb.BlackListReply
 	_, _, err := net.ParseCIDR(req.Subnet)
 	if err != nil {
@@ -111,6 +116,7 @@ func (s *GateKeeperServer) BlackList(ctx context.Context, req *pb.BlackListReque
 		s.logger.Warn("Method Check ", zap.String("This is not walid Subnet:", req.Subnet))
 		return rep, status.Errorf(codes.InvalidArgument, "Subnet CIDR is malformed")
 	}
+	s.logger.Debug("Method BlackList successfully executed for", zap.String("IP:", req.Subnet), zap.Bool("Add to list", req.Isadd))
 	rep = &pb.BlackListReply{
 		Ok: true,
 	}

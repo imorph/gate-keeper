@@ -110,6 +110,18 @@ func run() error {
 		// 	log.Fatal(*checkIP, " is not valid IP")
 		// }
 		fmt.Println("Will CHECK login attempt for", "Login:", *checkLogin, "Pass:", *checkPass, "IP:", *checkIP)
+		var conn *grpc.ClientConn
+		conn, err = grpc.Dial(cfg.ServerHost, grpc.WithInsecure())
+		if err != nil {
+			log.Fatalf("did not connect: %s", err)
+		}
+		defer conn.Close()
+		c := gatekeeper.NewGateKeeperClient(conn)
+		reply, err := c.Check(context.Background(), &gatekeeper.CheckRequest{Login: *checkLogin, Password: *checkPass, Ip: *checkIP})
+		if err != nil {
+			log.Printf("Error when calling Check: %s", err)
+		}
+		fmt.Println("Response from server: ", reply.GetOk())
 	case "reset":
 		err := cmdReset.Parse(os.Args[2:])
 		if err != nil {
@@ -126,6 +138,18 @@ func run() error {
 		// 	log.Fatal(*resetIP, " is not valid IP")
 		// }
 		fmt.Println("Will RESET login attempt counters for", "Login:", *resetLogin, "IP:", *resetIP)
+		var conn *grpc.ClientConn
+		conn, err = grpc.Dial(cfg.ServerHost, grpc.WithInsecure())
+		if err != nil {
+			log.Fatalf("did not connect: %s", err)
+		}
+		defer conn.Close()
+		c := gatekeeper.NewGateKeeperClient(conn)
+		reply, err := c.Reset(context.Background(), &gatekeeper.ResetRequest{Login: *resetLogin, Ip: *resetIP})
+		if err != nil {
+			log.Printf("Error when calling Reset: %s", err)
+		}
+		fmt.Println("Response from server: ", reply.GetOk())
 	case "white-list":
 		err := cmdWhiteList.Parse(os.Args[2:])
 		if err != nil {
@@ -142,6 +166,18 @@ func run() error {
 		// 	log.Fatal(err)
 		// }
 		fmt.Println("Will include/exclude from WHITE-LIST subnet", "Sub-Network:", *whiteListSubNet, "ADD:", *whiteListAdd)
+		var conn *grpc.ClientConn
+		conn, err = grpc.Dial(cfg.ServerHost, grpc.WithInsecure())
+		if err != nil {
+			log.Fatalf("did not connect: %s", err)
+		}
+		defer conn.Close()
+		c := gatekeeper.NewGateKeeperClient(conn)
+		reply, err := c.WhiteList(context.Background(), &gatekeeper.WhiteListRequest{Subnet: *whiteListSubNet, Isadd: *whiteListAdd})
+		if err != nil {
+			log.Printf("Error when calling White-list: %s", err)
+		}
+		fmt.Println("Response from server: ", reply.GetOk())
 	case "black-list":
 		err := cmdBlackList.Parse(os.Args[2:])
 		if err != nil {
@@ -158,6 +194,18 @@ func run() error {
 		// 	log.Fatal(err)
 		// }
 		fmt.Println("Will include/exclude from BLACK-LIST subnet", "Sub-Network:", *blackListSubNet, "ADD:", *blackListAdd)
+		var conn *grpc.ClientConn
+		conn, err = grpc.Dial(cfg.ServerHost, grpc.WithInsecure())
+		if err != nil {
+			log.Fatalf("did not connect: %s", err)
+		}
+		defer conn.Close()
+		c := gatekeeper.NewGateKeeperClient(conn)
+		reply, err := c.BlackList(context.Background(), &gatekeeper.BlackListRequest{Subnet: *blackListSubNet, Isadd: *blackListAdd})
+		if err != nil {
+			log.Printf("Error when calling Black-list: %s", err)
+		}
+		fmt.Println("Response from server: ", reply.GetOk())
 	default:
 		fmt.Printf("%q is not valid subcommand.\n", os.Args[1])
 		fmt.Println("")
@@ -180,20 +228,6 @@ func run() error {
 		fmt.Println("")
 		os.Exit(2)
 	}
-
-	var conn *grpc.ClientConn
-	conn, err := grpc.Dial(cfg.ServerHost, grpc.WithInsecure())
-	if err != nil {
-		log.Fatalf("did not connect: %s", err)
-	}
-	defer conn.Close()
-
-	c := gatekeeper.NewGateKeeperClient(conn)
-	reply, err := c.Check(context.Background(), &gatekeeper.CheckRequest{Login: *checkLogin, Password: *checkPass, Ip: *checkIP})
-	if err != nil {
-		log.Printf("Error when calling Check: %s", err)
-	}
-	log.Println("Response from server: ", reply.GetOk())
 
 	return nil
 }
