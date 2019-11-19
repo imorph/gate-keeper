@@ -81,7 +81,8 @@ func run() error {
 		s := server.NewGateKeeperServer(cfg.ListenHost, cfg.Logger)
 		err = s.Start()
 		if err != nil {
-			cfg.Logger.Error("Error strting server", zap.Error(err))
+			cfg.Logger.Error("Error starting server", zap.Error(err))
+			os.Exit(1)
 		}
 	}()
 
