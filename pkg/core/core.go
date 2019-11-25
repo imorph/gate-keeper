@@ -77,6 +77,11 @@ func (l *LimitersCache) Check(key string) bool {
 // HouseKeep tries to get list of expired keys (first read-only map scan)
 // and then delete all keys (that still outdated) from that list
 func (l *LimitersCache) HouseKeep() {
+	keysToDelete := l.mark()
+	l.sweep(keysToDelete)
+}
+
+func (l *LimitersCache) mark() []string {
 	currTS := time.Now()
 	var keysToDelete []string
 	l.mx.RLock()
@@ -86,7 +91,11 @@ func (l *LimitersCache) HouseKeep() {
 		}
 	}
 	l.mx.RUnlock()
-	currTS = time.Now()
+	return keysToDelete
+}
+
+func (l *LimitersCache) sweep(keysToDelete []string) {
+	currTS := time.Now()
 	l.mx.Lock()
 	for _, key := range keysToDelete {
 		if currTS.Sub(l.lm[key].lastTS) > l.hktime {
