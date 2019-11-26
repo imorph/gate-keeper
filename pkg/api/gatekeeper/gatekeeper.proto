@@ -6,7 +6,7 @@ package gatekeeper;
 service GateKeeper {
   // this will check login details and update associated counters
   rpc Check (CheckRequest) returns (CheckReply) {}
-  // this will reset counters associated with derds from request
+  // this will reset counters associated with details from request
   rpc Reset (ResetRequest) returns (ResetReply) {}
   // add/delete network/ip in white-list, all requests from whitelisted networks are OK by default
   // IMPORTANT: black-list have precedence over white-list, if network in both sets, requests will be banned

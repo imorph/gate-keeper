@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"net"
+	"time"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -10,17 +11,28 @@ import (
 	status "google.golang.org/grpc/status"
 
 	pb "github.com/imorph/gate-keeper/pkg/api/gatekeeper"
+	"github.com/imorph/gate-keeper/pkg/core"
 )
 
 type GateKeeperServer struct {
 	listenHost string
 	logger     *zap.Logger
+	ip         *core.LimitersCache
+	login      *core.LimitersCache
+	pass       *core.LimitersCache
+	white      *core.List
+	black      *core.List
 }
 
-func NewGateKeeperServer(listenHost string, logger *zap.Logger) *GateKeeperServer {
+func NewGateKeeperServer(listenHost string, logger *zap.Logger, ipMax, loginMax, passMax int) *GateKeeperServer {
 	return &GateKeeperServer{
 		listenHost: listenHost,
 		logger:     logger,
+		ip:         core.NewCache(ipMax, time.Minute, 2*time.Minute),
+		login:      core.NewCache(loginMax, time.Minute, 2*time.Minute),
+		pass:       core.NewCache(passMax, time.Minute, 2*time.Minute),
+		white:      core.NewList(),
+		black:      core.NewList(),
 	}
 }
 
@@ -50,6 +62,25 @@ func (s *GateKeeperServer) Start() error {
 	if err != nil {
 		return err
 	}
+	go func() {
+		ticker := time.NewTicker(3 * time.Minute)
+		for range ticker.C {
+			s.ip.HouseKeep()
+		}
+	}()
+	go func() {
+		ticker := time.NewTicker(3 * time.Minute)
+		for range ticker.C {
+			s.login.HouseKeep()
+		}
+	}()
+	go func() {
+		ticker := time.NewTicker(3 * time.Minute)
+		for range ticker.C {
+			s.pass.HouseKeep()
+		}
+	}()
+
 	return nil
 }
 
@@ -61,8 +92,63 @@ func (s *GateKeeperServer) Check(ctx context.Context, req *pb.CheckRequest) (*pb
 		rep = &pb.CheckReply{
 			Ok: false,
 		}
-		s.logger.Warn("Method Check ", zap.String("This is not walid IP:", req.Ip))
+		s.logger.Warn("Method Check ", zap.String("This is not valid IP:", req.Ip))
 		return rep, status.Errorf(codes.InvalidArgument, "IP address is malformed")
+	}
+	ok, err := s.black.LookUpIP(req.GetIp())
+	if err != nil {
+		rep = &pb.CheckReply{
+			Ok: false,
+		}
+		s.logger.Warn("Method Check ", zap.String("This is not valid IP:", req.Ip))
+		return rep, status.Errorf(codes.InvalidArgument, "IP address is malformed")
+	}
+	if ok {
+		rep = &pb.CheckReply{
+			Ok: false,
+		}
+		s.logger.Warn("Method Check ", zap.String("This IP in BLACK LIST:", req.Ip))
+		return rep, status.Errorf(codes.PermissionDenied, "IP address in black-list")
+	}
+	ok, err = s.white.LookUpIP(req.GetIp())
+	if err != nil {
+		rep = &pb.CheckReply{
+			Ok: false,
+		}
+		s.logger.Warn("Method Check ", zap.String("This is not valid IP:", req.Ip))
+		return rep, status.Errorf(codes.InvalidArgument, "IP address is malformed")
+	}
+	if ok {
+		rep = &pb.CheckReply{
+			Ok: true,
+		}
+		s.logger.Debug("Method Check ", zap.String("This IP in WHITE LIST:", req.Ip))
+		return rep, nil
+	}
+
+	ok = s.ip.Check(req.GetIp())
+	if !ok {
+		rep = &pb.CheckReply{
+			Ok: false,
+		}
+		s.logger.Debug("Method Check ", zap.String("Too many attempts for IP", req.Ip))
+		return rep, status.Errorf(codes.PermissionDenied, "IP address max attempts reached")
+	}
+	ok = s.login.Check(req.GetLogin())
+	if !ok {
+		rep = &pb.CheckReply{
+			Ok: false,
+		}
+		s.logger.Debug("Method Check ", zap.String("Too many attempts for Login:", req.Login))
+		return rep, status.Errorf(codes.PermissionDenied, "Login max attempts reached")
+	}
+	ok = s.pass.Check(req.GetPassword())
+	if !ok {
+		rep = &pb.CheckReply{
+			Ok: false,
+		}
+		s.logger.Debug("Method Check ", zap.String("Too many attempts for Pass:", "***"))
+		return rep, status.Errorf(codes.PermissionDenied, "Password max attempts reached")
 	}
 	s.logger.Debug("Method Check successfully executed for", zap.String("IP:", req.Ip), zap.String("Login", req.Login))
 	rep = &pb.CheckReply{
@@ -79,7 +165,7 @@ func (s *GateKeeperServer) Reset(ctx context.Context, req *pb.ResetRequest) (*pb
 		rep = &pb.ResetReply{
 			Ok: false,
 		}
-		s.logger.Warn("Method Check ", zap.String("This is not walid IP:", req.Ip))
+		s.logger.Warn("Method Check ", zap.String("This is not valid IP:", req.Ip))
 		return rep, status.Errorf(codes.InvalidArgument, "IP address is malformed")
 	}
 	s.logger.Debug("Method Reset successfully executed for", zap.String("IP:", req.Ip), zap.String("Login", req.Login))
@@ -96,7 +182,7 @@ func (s *GateKeeperServer) WhiteList(ctx context.Context, req *pb.WhiteListReque
 		rep = &pb.WhiteListReply{
 			Ok: false,
 		}
-		s.logger.Warn("Method Check ", zap.String("This is not walid Subnet:", req.Subnet))
+		s.logger.Warn("Method Check ", zap.String("This is not valid Subnet:", req.Subnet))
 		return rep, status.Errorf(codes.InvalidArgument, "Subnet CIDR is malformed")
 	}
 	s.logger.Debug("Method WhiteList successfully executed for", zap.String("IP:", req.Subnet), zap.Bool("Add to list", req.Isadd))
@@ -113,7 +199,7 @@ func (s *GateKeeperServer) BlackList(ctx context.Context, req *pb.BlackListReque
 		rep = &pb.BlackListReply{
 			Ok: false,
 		}
-		s.logger.Warn("Method Check ", zap.String("This is not walid Subnet:", req.Subnet))
+		s.logger.Warn("Method Check ", zap.String("This is not valid Subnet:", req.Subnet))
 		return rep, status.Errorf(codes.InvalidArgument, "Subnet CIDR is malformed")
 	}
 	s.logger.Debug("Method BlackList successfully executed for", zap.String("IP:", req.Subnet), zap.Bool("Add to list", req.Isadd))

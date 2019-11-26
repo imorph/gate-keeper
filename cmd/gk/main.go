@@ -78,7 +78,7 @@ func run() error {
 	defer stdLog()
 
 	go func() {
-		s := server.NewGateKeeperServer(cfg.ListenHost, cfg.Logger)
+		s := server.NewGateKeeperServer(cfg.ListenHost, cfg.Logger, cfg.IPThreshold, cfg.LoginThreshold, cfg.PassThreshold)
 		err = s.Start()
 		if err != nil {
 			cfg.Logger.Error("Error starting server", zap.Error(err))
