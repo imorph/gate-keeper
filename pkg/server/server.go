@@ -126,24 +126,24 @@ func (s *GateKeeperServer) Check(ctx context.Context, req *pb.CheckRequest) (*pb
 		return rep, nil
 	}
 
-	ok = s.ip.Check(req.GetIp())
-	if !ok {
+	okIP := s.ip.Check(req.GetIp())
+	okLogin := s.login.Check(req.GetLogin())
+	okPass := s.pass.Check(req.GetPassword())
+	if !okIP {
 		rep = &pb.CheckReply{
 			Ok: false,
 		}
 		s.logger.Debug("Method Check ", zap.String("Too many attempts for IP", req.Ip))
 		return rep, status.Errorf(codes.PermissionDenied, "IP address max attempts reached")
 	}
-	ok = s.login.Check(req.GetLogin())
-	if !ok {
+	if !okLogin {
 		rep = &pb.CheckReply{
 			Ok: false,
 		}
 		s.logger.Debug("Method Check ", zap.String("Too many attempts for Login:", req.Login))
 		return rep, status.Errorf(codes.PermissionDenied, "Login max attempts reached")
 	}
-	ok = s.pass.Check(req.GetPassword())
-	if !ok {
+	if !okPass {
 		rep = &pb.CheckReply{
 			Ok: false,
 		}
@@ -168,6 +168,8 @@ func (s *GateKeeperServer) Reset(ctx context.Context, req *pb.ResetRequest) (*pb
 		s.logger.Warn("Method Check ", zap.String("This is not valid IP:", req.Ip))
 		return rep, status.Errorf(codes.InvalidArgument, "IP address is malformed")
 	}
+	s.ip.Reset(req.GetIp())
+	s.login.Reset(req.GetLogin())
 	s.logger.Debug("Method Reset successfully executed for", zap.String("IP:", req.Ip), zap.String("Login", req.Login))
 	rep = &pb.ResetReply{
 		Ok: true,
@@ -185,6 +187,25 @@ func (s *GateKeeperServer) WhiteList(ctx context.Context, req *pb.WhiteListReque
 		s.logger.Warn("Method Check ", zap.String("This is not valid Subnet:", req.Subnet))
 		return rep, status.Errorf(codes.InvalidArgument, "Subnet CIDR is malformed")
 	}
+	if req.GetIsadd() {
+		err := s.white.InsertCIDR(req.GetSubnet())
+		if err != nil {
+			rep = &pb.WhiteListReply{
+				Ok: false,
+			}
+			s.logger.Warn("Method Check ", zap.String("This is not valid Subnet:", req.Subnet))
+			return rep, status.Errorf(codes.InvalidArgument, "Subnet CIDR is malformed")
+		}
+	} else {
+		err := s.white.DeleteCIDR(req.GetSubnet())
+		if err != nil {
+			rep = &pb.WhiteListReply{
+				Ok: false,
+			}
+			s.logger.Warn("Method Check ", zap.String("This is not valid Subnet:", req.Subnet))
+			return rep, status.Errorf(codes.InvalidArgument, "Subnet CIDR is malformed")
+		}
+	}
 	s.logger.Debug("Method WhiteList successfully executed for", zap.String("IP:", req.Subnet), zap.Bool("Add to list", req.Isadd))
 	rep = &pb.WhiteListReply{
 		Ok: true,
@@ -201,6 +222,26 @@ func (s *GateKeeperServer) BlackList(ctx context.Context, req *pb.BlackListReque
 		}
 		s.logger.Warn("Method Check ", zap.String("This is not valid Subnet:", req.Subnet))
 		return rep, status.Errorf(codes.InvalidArgument, "Subnet CIDR is malformed")
+	}
+
+	if req.GetIsadd() {
+		err := s.black.InsertCIDR(req.GetSubnet())
+		if err != nil {
+			rep = &pb.BlackListReply{
+				Ok: false,
+			}
+			s.logger.Warn("Method Check ", zap.String("This is not valid Subnet:", req.Subnet))
+			return rep, status.Errorf(codes.InvalidArgument, "Subnet CIDR is malformed")
+		}
+	} else {
+		err := s.black.DeleteCIDR(req.GetSubnet())
+		if err != nil {
+			rep = &pb.BlackListReply{
+				Ok: false,
+			}
+			s.logger.Warn("Method Check ", zap.String("This is not valid Subnet:", req.Subnet))
+			return rep, status.Errorf(codes.InvalidArgument, "Subnet CIDR is malformed")
+		}
 	}
 	s.logger.Debug("Method BlackList successfully executed for", zap.String("IP:", req.Subnet), zap.Bool("Add to list", req.Isadd))
 	rep = &pb.BlackListReply{
