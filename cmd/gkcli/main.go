@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 	//"net"
 	"os"
 
@@ -206,6 +207,32 @@ func run() error {
 			log.Printf("Error when calling Black-list: %s", err)
 		}
 		fmt.Println("Response from server: ", reply.GetOk())
+	case "simple-bench":
+		fmt.Println("Will do simple single-threaded benchmark")
+		var conn *grpc.ClientConn
+		conn, err := grpc.Dial(cfg.ServerHost, grpc.WithInsecure())
+		if err != nil {
+			log.Fatalf("did not connect: %s", err)
+		}
+		defer conn.Close()
+		c := gatekeeper.NewGateKeeperClient(conn)
+		start := time.Now()
+		ips := 256
+		lgs := 1000
+		for i := 0; i < ips; i++ {
+			for j := 0; j < lgs; j++ {
+				_, err := c.Check(context.Background(), &gatekeeper.CheckRequest{
+					Login:    fmt.Sprintf("ivan-%d-%d", j, i),
+					Password: fmt.Sprintf("pass-%d-%d", j, i),
+					Ip:       fmt.Sprintf("192.168.1.%d", i),
+				})
+				if err != nil {
+					log.Printf("Error when calling Check: %s", err)
+				}
+			}
+		}
+		fmt.Println(ips*lgs, " requests executed in ", time.Since(start))
+		//fmt.Println("Response from server: ", reply.GetOk())
 	default:
 		fmt.Printf("%q is not valid subcommand.\n", os.Args[1])
 		fmt.Println("")

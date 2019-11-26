@@ -17,7 +17,7 @@ type LimitersCache struct {
 	lifetime  time.Duration // lifetime of a Limiter/"bucket") usually minute
 	hktime    time.Duration // House Keeping time interval (outdated entries gets whiped out once every hktime)
 	mx        sync.RWMutex
-	lm        map[string]limiter
+	lm        map[string]*limiter
 }
 
 func NewCache(thr int, lt, hkt time.Duration) *LimitersCache {
@@ -25,7 +25,7 @@ func NewCache(thr int, lt, hkt time.Duration) *LimitersCache {
 		threshold: thr,
 		lifetime:  lt,
 		hktime:    hkt,
-		lm:        make(map[string]limiter),
+		lm:        make(map[string]*limiter),
 	}
 	return c
 }
@@ -45,7 +45,7 @@ func (l *LimitersCache) Check(key string) bool {
 		if currTS.Sub(val.lastTS) > l.lifetime {
 			// it is more than a minute since this login/pass/ip was used last time
 			// reseting counter to 1 and setting current ts
-			l.lm[key] = limiter{
+			l.lm[key] = &limiter{
 				counter: 1,
 				lastTS:  currTS,
 			}
@@ -53,7 +53,7 @@ func (l *LimitersCache) Check(key string) bool {
 			// it is at least second time this login pass or ip was used in this minute
 			// incrementing counter and set last modification to current TS
 			val.counter++
-			l.lm[key] = limiter{
+			l.lm[key] = &limiter{
 				counter: val.counter,
 				lastTS:  currTS,
 			}
@@ -65,7 +65,7 @@ func (l *LimitersCache) Check(key string) bool {
 	} else {
 		// we did not found this login pass or ip in our map
 		// so lets create it
-		l.lm[key] = limiter{
+		l.lm[key] = &limiter{
 			counter: 1,
 			lastTS:  currTS,
 		}
@@ -92,22 +92,24 @@ func (l *LimitersCache) mark() []string {
 	currTS := time.Now()
 	var keysToDelete []string
 	l.mx.RLock()
+	defer l.mx.RUnlock()
 	for key, value := range l.lm {
 		if currTS.Sub(value.lastTS) > l.hktime {
 			keysToDelete = append(keysToDelete, key)
 		}
 	}
-	l.mx.RUnlock()
+
 	return keysToDelete
 }
 
 func (l *LimitersCache) sweep(keysToDelete []string) {
 	currTS := time.Now()
 	l.mx.Lock()
+	defer l.mx.Unlock()
 	for _, key := range keysToDelete {
 		if currTS.Sub(l.lm[key].lastTS) > l.hktime {
 			delete(l.lm, key)
 		}
 	}
-	l.mx.Unlock()
+
 }

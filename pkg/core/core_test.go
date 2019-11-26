@@ -188,20 +188,5 @@ func TestConcurrentChecksAndHouseKeeping(t *testing.T) {
 			cache.HouseKeep()
 		}
 	}()
-
-	go func() {
-		ticker := time.NewTicker(1 * time.Second)
-		for range ticker.C {
-			cache.HouseKeep()
-		}
-	}()
-
-	go func() {
-		ticker := time.NewTicker(1 * time.Second)
-		for range ticker.C {
-			cache.HouseKeep()
-		}
-	}()
-
 	time.Sleep(10 * time.Second)
 }
