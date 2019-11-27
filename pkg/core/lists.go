@@ -8,6 +8,9 @@ import (
 )
 
 // List is threadsafe container for Ranger type
+// cidranger uses path-compressed trie for storing CIDRs and looking up for IP inclusion in stored CIDRs
+// alternative is to use map with all black/white listed CIDRs and scan each value to check if given IP in every range (with O(n) complexity)
+// another possible alternative is radix tree with O(k)
 type List struct {
 	mx     sync.RWMutex
 	ranger cidranger.Ranger

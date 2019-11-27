@@ -16,6 +16,14 @@ run:
 test:
 		GO111MODULE=on go test -v -race ./...
 
+bench:
+		GO111MODULE=on go test -bench=. ./pkg/core/... -benchmem
+
+docker-bench:
+		docker-compose up -d
+		docker exec gate-keeper_gk_1 gkcli simple-bench
+		docker-compose down
+
 build:
 		GO111MODULE=on CGO_ENABLED=0 go build  -ldflags "-s -w -X github.com/imorph/gate-keeper/pkg/version.revision=$(GIT_COMMIT) -X github.com/imorph/gate-keeper/pkg/version.appname=$(NAME)" -a -o ./bin/gk ./cmd/gk/*
 		GO111MODULE=on CGO_ENABLED=0 go build  -ldflags "-s -w -X github.com/imorph/gate-keeper/pkg/version.revision=$(GIT_COMMIT) -X github.com/imorph/gate-keeper/pkg/version.appname=$(CLI_NAME)" -a -o ./bin/gkcli ./cmd/gkcli/*

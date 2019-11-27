@@ -10,12 +10,12 @@ RUN go mod download
 
 RUN go test -v -race ./...
 
-RUN GIT_COMMIT=$(git rev-list -1 HEAD) && \
+RUN GIT_COMMIT=$(git describe --dirty --always) && \
     CGO_ENABLED=0 GOOS=linux go build -ldflags "-s -w \
     -X github.com/imorph/gate-keeper/pkg/version.revision=${GIT_COMMIT}" \
     -a -o bin/gk cmd/gk/*
 
-RUN GIT_COMMIT=$(git rev-list -1 HEAD) && \
+RUN GIT_COMMIT=$(git describe --dirty --always) && \
     CGO_ENABLED=0 GOOS=linux go build -ldflags "-s -w \
     -X github.com/imorph/gate-keeper/pkg/version.revision=${GIT_COMMIT}" \
     -a -o bin/gkcli cmd/gkcli/*
