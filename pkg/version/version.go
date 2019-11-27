@@ -1,21 +1,21 @@
 package version
 
-var APPNAME = "unknown"
-var VERSION = "v0.0.3"
+var appname = "unknown"
+var version = "v0.0.3"
 
-var REVISION = "unknown"
+var revision = "unknown"
 
 // GetVersion returns version
 func GetVersion() string {
-	return VERSION
+	return version
 }
 
 // GetRevision returns revision
 func GetRevision() string {
-	return REVISION
+	return revision
 }
 
 // GetAppName returns revision
 func GetAppName() string {
-	return APPNAME
+	return appname
 }

@@ -71,6 +71,10 @@ func run() error {
 	blackListAdd := cmdBlackList.Bool("add", true, "Add/delete to/from blacklist")
 	cmdBlackList.AddFlagSet(defaults)
 
+	cmdBench := pflag.NewFlagSet("simple-bench", pflag.ExitOnError)
+	ipBase := cmdBench.String("ipbase", "192.168.10.", `base for IP like: "192.168.1."`)
+	loginPassBase := cmdBench.String("lpbase", "test", `base for logins and passwords`)
+
 	if len(os.Args) == 1 {
 		fmt.Println("No subcomand given")
 		fmt.Println("")
@@ -116,7 +120,12 @@ func run() error {
 		if err != nil {
 			log.Fatalf("did not connect: %s", err)
 		}
-		defer conn.Close()
+		defer func(conn *grpc.ClientConn) {
+			if err := conn.Close(); err != nil {
+				log.Printf("Error when calling CLose: %s", err)
+			}
+
+		}(conn)
 		c := gatekeeper.NewGateKeeperClient(conn)
 		reply, err := c.Check(context.Background(), &gatekeeper.CheckRequest{Login: *checkLogin, Password: *checkPass, Ip: *checkIP})
 		if err != nil {
@@ -144,7 +153,14 @@ func run() error {
 		if err != nil {
 			log.Fatalf("did not connect: %s", err)
 		}
-		defer conn.Close()
+
+		defer func(conn *grpc.ClientConn) {
+			if err := conn.Close(); err != nil {
+				log.Printf("Error when calling CLose: %s", err)
+			}
+
+		}(conn)
+
 		c := gatekeeper.NewGateKeeperClient(conn)
 		reply, err := c.Reset(context.Background(), &gatekeeper.ResetRequest{Login: *resetLogin, Ip: *resetIP})
 		if err != nil {
@@ -172,7 +188,12 @@ func run() error {
 		if err != nil {
 			log.Fatalf("did not connect: %s", err)
 		}
-		defer conn.Close()
+		defer func(conn *grpc.ClientConn) {
+			if err := conn.Close(); err != nil {
+				log.Printf("Error when calling CLose: %s", err)
+			}
+
+		}(conn)
 		c := gatekeeper.NewGateKeeperClient(conn)
 		reply, err := c.WhiteList(context.Background(), &gatekeeper.WhiteListRequest{Subnet: *whiteListSubNet, Isadd: *whiteListAdd})
 		if err != nil {
@@ -200,7 +221,12 @@ func run() error {
 		if err != nil {
 			log.Fatalf("did not connect: %s", err)
 		}
-		defer conn.Close()
+		defer func(conn *grpc.ClientConn) {
+			if err := conn.Close(); err != nil {
+				log.Printf("Error when calling CLose: %s", err)
+			}
+
+		}(conn)
 		c := gatekeeper.NewGateKeeperClient(conn)
 		reply, err := c.BlackList(context.Background(), &gatekeeper.BlackListRequest{Subnet: *blackListSubNet, Isadd: *blackListAdd})
 		if err != nil {
@@ -214,7 +240,12 @@ func run() error {
 		if err != nil {
 			log.Fatalf("did not connect: %s", err)
 		}
-		defer conn.Close()
+		defer func(conn *grpc.ClientConn) {
+			if err := conn.Close(); err != nil {
+				log.Printf("Error when calling CLose: %s", err)
+			}
+
+		}(conn)
 		c := gatekeeper.NewGateKeeperClient(conn)
 		start := time.Now()
 		ips := 256
@@ -222,9 +253,9 @@ func run() error {
 		for i := 0; i < ips; i++ {
 			for j := 0; j < lgs; j++ {
 				_, err := c.Check(context.Background(), &gatekeeper.CheckRequest{
-					Login:    fmt.Sprintf("ivan-%d-%d", j, i),
-					Password: fmt.Sprintf("pass-%d-%d", j, i),
-					Ip:       fmt.Sprintf("192.168.1.%d", i),
+					Login:    fmt.Sprintf("%s-%d-%d", *loginPassBase, j, i),
+					Password: fmt.Sprintf("%s-%d-%d", *loginPassBase, j, i),
+					Ip:       fmt.Sprintf("%s%d", *ipBase, i),
 				})
 				if err != nil {
 					log.Printf("Error when calling Check: %s", err)
@@ -252,6 +283,9 @@ func run() error {
 		fmt.Println("")
 		fmt.Println("black-list settings:")
 		cmdBlackList.PrintDefaults()
+		fmt.Println("")
+		fmt.Println("simple-bench settings:")
+		cmdBench.PrintDefaults()
 		fmt.Println("")
 		os.Exit(2)
 	}

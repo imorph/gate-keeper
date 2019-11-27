@@ -14,6 +14,7 @@ import (
 	"github.com/imorph/gate-keeper/pkg/core"
 )
 
+// GateKeeperServer is basic struct for server
 type GateKeeperServer struct {
 	listenHost string
 	logger     *zap.Logger
@@ -24,6 +25,7 @@ type GateKeeperServer struct {
 	black      *core.List
 }
 
+// NewGateKeeperServer accept settings and returns new gatekeeper server
 func NewGateKeeperServer(listenHost string, logger *zap.Logger, ipMax, loginMax, passMax int) *GateKeeperServer {
 	return &GateKeeperServer{
 		listenHost: listenHost,
@@ -36,6 +38,7 @@ func NewGateKeeperServer(listenHost string, logger *zap.Logger, ipMax, loginMax,
 	}
 }
 
+// Start starts new server
 func (s *GateKeeperServer) Start() error {
 	lis, err := net.Listen("tcp", s.listenHost)
 	if err != nil {
@@ -56,34 +59,39 @@ func (s *GateKeeperServer) Start() error {
 	// 	}
 	// 	opts = []grpc.ServerOption{grpc.Creds(creds)}
 	// }
+	go func() {
+		ticker := time.NewTicker(1 * time.Minute)
+		for range ticker.C {
+			s.ip.HouseKeep()
+			s.logger.Debug("Housekeeping for IPs done.")
+		}
+	}()
+	go func() {
+		ticker := time.NewTicker(1 * time.Minute)
+		for range ticker.C {
+			s.login.HouseKeep()
+			s.logger.Debug("Housekeeping for Logins done.")
+		}
+	}()
+	go func() {
+		ticker := time.NewTicker(1 * time.Minute)
+		for range ticker.C {
+			s.pass.HouseKeep()
+			s.logger.Debug("Housekeeping for Passwords done.")
+		}
+	}()
+
 	grpcServer := grpc.NewServer(opts...)
 	pb.RegisterGateKeeperServer(grpcServer, s)
 	err = grpcServer.Serve(lis)
 	if err != nil {
 		return err
 	}
-	go func() {
-		ticker := time.NewTicker(3 * time.Minute)
-		for range ticker.C {
-			s.ip.HouseKeep()
-		}
-	}()
-	go func() {
-		ticker := time.NewTicker(3 * time.Minute)
-		for range ticker.C {
-			s.login.HouseKeep()
-		}
-	}()
-	go func() {
-		ticker := time.NewTicker(3 * time.Minute)
-		for range ticker.C {
-			s.pass.HouseKeep()
-		}
-	}()
 
 	return nil
 }
 
+// Check is handler for external request to check ip/login/pass bruteforcing
 func (s *GateKeeperServer) Check(ctx context.Context, req *pb.CheckRequest) (*pb.CheckReply, error) {
 	s.logger.Debug("Method Check called for", zap.String("IP:", req.Ip), zap.String("Login", req.Login))
 	var rep *pb.CheckReply
@@ -157,6 +165,7 @@ func (s *GateKeeperServer) Check(ctx context.Context, req *pb.CheckRequest) (*pb
 	return rep, nil
 }
 
+// Reset is handler for reseting counters for particular IP/Login
 func (s *GateKeeperServer) Reset(ctx context.Context, req *pb.ResetRequest) (*pb.ResetReply, error) {
 	s.logger.Debug("Method Reset called for", zap.String("IP:", req.Ip), zap.String("Login", req.Login))
 	var rep *pb.ResetReply
@@ -176,6 +185,8 @@ func (s *GateKeeperServer) Reset(ctx context.Context, req *pb.ResetRequest) (*pb
 	}
 	return rep, nil
 }
+
+// WhiteList is handler for adding CIDR to white list
 func (s *GateKeeperServer) WhiteList(ctx context.Context, req *pb.WhiteListRequest) (*pb.WhiteListReply, error) {
 	s.logger.Debug("Method WhiteList called for", zap.String("IP:", req.Subnet), zap.Bool("Add to list", req.Isadd))
 	var rep *pb.WhiteListReply
@@ -212,6 +223,8 @@ func (s *GateKeeperServer) WhiteList(ctx context.Context, req *pb.WhiteListReque
 	}
 	return rep, nil
 }
+
+// BlackList is handler for adding CIDR to black list
 func (s *GateKeeperServer) BlackList(ctx context.Context, req *pb.BlackListRequest) (*pb.BlackListReply, error) {
 	s.logger.Debug("Method BlackList called for", zap.String("IP:", req.Subnet), zap.Bool("Add to list", req.Isadd))
 	var rep *pb.BlackListReply

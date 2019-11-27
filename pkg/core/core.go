@@ -20,6 +20,7 @@ type LimitersCache struct {
 	lm        map[string]*limiter
 }
 
+// NewCache creates new instance of Limiters cache
 func NewCache(thr int, lt, hkt time.Duration) *LimitersCache {
 	c := &LimitersCache{
 		threshold: thr,

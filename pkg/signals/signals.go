@@ -1,8 +1,8 @@
 package signals
 
 import (
-        "os"
-        "os/signal"
+	"os"
+	"os/signal"
 )
 
 var onlyOneSignalHandler = make(chan struct{})
@@ -11,8 +11,8 @@ var onlyOneSignalHandler = make(chan struct{})
 //
 // Returns the caught signal.
 func WaitForSigterm() os.Signal {
-        close(onlyOneSignalHandler) // panics when called twice
-        ch := make(chan os.Signal, 1)
-        signal.Notify(ch, shutdownSignals...)
-        return <-ch
+	close(onlyOneSignalHandler) // panics when called twice
+	ch := make(chan os.Signal, 1)
+	signal.Notify(ch, shutdownSignals...)
+	return <-ch
 }
