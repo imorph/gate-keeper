@@ -35,4 +35,4 @@ RUN chown -R app:app ./
 
 USER app
 
-CMD ["./gk --listen-host 0.0.0.0:10001 --log-level $LOG_LEVEL"]
+CMD  ./gk --listen-host 0.0.0.0:10001 --log-level $LOG_LEVEL

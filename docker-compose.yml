@@ -2,6 +2,7 @@ version: '3'
 services:
   gk:
     build: .
+    # image: ivanvg/gate-keeper:v1.0.2
     ports:
       - "10001:10001"
     environment:
