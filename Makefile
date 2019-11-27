@@ -28,7 +28,7 @@ build:
 		GO111MODULE=on CGO_ENABLED=0 go build  -ldflags "-s -w -X github.com/imorph/gate-keeper/pkg/version.revision=$(GIT_COMMIT) -X github.com/imorph/gate-keeper/pkg/version.appname=$(NAME)" -a -o ./bin/gk ./cmd/gk/*
 		GO111MODULE=on CGO_ENABLED=0 go build  -ldflags "-s -w -X github.com/imorph/gate-keeper/pkg/version.revision=$(GIT_COMMIT) -X github.com/imorph/gate-keeper/pkg/version.appname=$(CLI_NAME)" -a -o ./bin/gkcli ./cmd/gkcli/*
 
-release:
+release: build-container push-container
 		git tag $(VERSION)
 		git push origin $(VERSION)
 		goreleaser --rm-dist
