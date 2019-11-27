@@ -5,10 +5,10 @@
 TAG?=latest
 NAME:=gate-keeper
 CLI_NAME:=gate-keeper-cli
-DOCKER_REPOSITORY:=imorph
+DOCKER_REPOSITORY:=ivanvg
 DOCKER_IMAGE_NAME:=$(DOCKER_REPOSITORY)/$(NAME)
 GIT_COMMIT:=$(shell git describe --dirty --always)
-VERSION:=$(shell grep 'version' pkg/version/version.go | awk '{ print $$4 }' | tr -d '"')
+VERSION:=$(shell grep "version = " pkg/version/version.go | awk '{ print $$4 }' | tr -d '"')
 
 run:
 		GO111MODULE=on go run -ldflags "-s -w -X github.com/imorph/gate-keeper/pkg/version.revision=$(GIT_COMMIT)" cmd/gk/* --log-level=debug
@@ -54,3 +54,9 @@ golangci-lint: install-golangci-lint
 
 install-golangci-lint:
 		which golangci-lint || GO111MODULE=off go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
+
+build-container:
+		docker build -t $(DOCKER_IMAGE_NAME):$(VERSION) .
+
+push-container:
+		docker push $(DOCKER_IMAGE_NAME):$(VERSION)
