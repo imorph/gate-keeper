@@ -1,0 +1,9 @@
+version: '3'
+services:
+  gk:
+    build: .
+    ports:
+      - "10001:10001"
+    environment:
+      LOG_LEVEL: debug
+
