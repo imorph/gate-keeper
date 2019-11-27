@@ -23,7 +23,7 @@ build:
 release:
 		git tag $(VERSION)
 		git push origin $(VERSION)
-		goreleaser
+		goreleaser --rm-dist
 
 fmt:
 		GO111MODULE=on gofmt -l -w -s ./pkg
