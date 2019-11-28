@@ -82,7 +82,7 @@ func (s *GateKeeperServer) Start() error {
 
 // Stop tries to gracefully stop server
 func (s *GateKeeperServer) Stop() {
-	s.logger.Info("stopping server")
+	s.logger.Debug("stopping server")
 	s.grpcServ.GracefulStop()
 }
 
@@ -110,7 +110,7 @@ func (s *GateKeeperServer) Check(ctx context.Context, req *pb.CheckRequest) (*pb
 		rep = &pb.CheckReply{
 			Ok: false,
 		}
-		s.logger.Warn("Method Check ", zap.String("This IP in BLACK LIST:", req.Ip))
+		s.logger.Debug("Method Check ", zap.String("This IP in BLACK LIST:", req.Ip))
 		return rep, status.Errorf(codes.PermissionDenied, "IP address in black-list")
 	}
 	ok, err = s.white.LookUpIP(req.GetIp())

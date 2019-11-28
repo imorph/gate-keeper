@@ -18,6 +18,7 @@ test:
 
 bench:
 		GO111MODULE=on go test -bench=. ./pkg/core/... -benchmem
+		GO111MODULE=on go test -bench=. ./pkg/server/... -benchmem
 
 docker-bench:
 		docker-compose up -d
