@@ -3,12 +3,19 @@
 gate-keeper is simple anti-bruteforce service with gRPC API
 
 ```
-                                                                     reset ip/login
-           +----------+  ip+login+hash(pass) req   +-------------+<--------------------+---------+
+
+                                                                     
+           +----------+                            +-------------+                     +---------+
+           |          |                            |             |   reset ip/login    |         |           
+           |  Some    | ip+login+hash(pass) req    |             +<--------------------+         |
  Auth Req  |  Auth    +--------------------------->+             |    CIDR black list  |         |
-+--------->+  Service |                            |  Gate-Keeper+<--------------------+ gkcli   |
++--------->+  Service |                            | Gate-Keeper +<--------------------+ gkcli   |
            |          +<---------------------------+             |    CIDR white list  |         |
-           +----------+    ok/nok resp             --------------+<--------------------+---------+
+<----------+          |       ok/nok resp          |             +<--------------------+         |
+   ok/nok  |          |                            |             |                     |         |
+           +----------+                            +-------------+                     +---------+
+
+
 
 ```
 
@@ -21,6 +28,7 @@ make build
 ```
 
 produces `gk` and `gkcli` in `./bin` directory
+
 `gk` is service
 `gkcli` is cli command able to:
 
@@ -48,7 +56,7 @@ make test
 builds docker container:
 
 ```shell
-build-container
+make build-container
 ```
 
 ## Run
