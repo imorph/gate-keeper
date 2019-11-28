@@ -76,15 +76,14 @@ func run() error {
 
 	stdLog := zap.RedirectStdLog(cfg.Logger)
 	defer stdLog()
-
-	go func() {
-		s := server.NewGateKeeperServer(cfg.ListenHost, cfg.Logger, cfg.IPThreshold, cfg.LoginThreshold, cfg.PassThreshold)
+	s := server.NewGateKeeperServer(cfg.ListenHost, cfg.Logger, cfg.IPThreshold, cfg.LoginThreshold, cfg.PassThreshold)
+	go func(s *server.GateKeeperServer) {
 		err = s.Start()
 		if err != nil {
 			cfg.Logger.Error("Error starting server", zap.Error(err))
 			os.Exit(1)
 		}
-	}()
+	}(s)
 
 	cfg.Logger.Info("Application started",
 		zap.Duration("startup_duration", time.Since(startTime)),
@@ -100,6 +99,7 @@ func run() error {
 	//==========================
 	//stop sequence
 	sigtime := time.Now()
+	s.Stop()
 	cfg.Logger.Sugar().Info("OS signal received, stopping. ", "signal: ", sig)
 	cfg.Logger.Info("Application stopped",
 		zap.Duration("stop_duration", time.Since(sigtime)),

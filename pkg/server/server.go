@@ -23,10 +23,12 @@ type GateKeeperServer struct {
 	pass       *core.LimitersCache
 	white      *core.List
 	black      *core.List
+	grpcServ   *grpc.Server
 }
 
 // NewGateKeeperServer accept settings and returns new gatekeeper server
 func NewGateKeeperServer(listenHost string, logger *zap.Logger, ipMax, loginMax, passMax int) *GateKeeperServer {
+	var opts []grpc.ServerOption
 	return &GateKeeperServer{
 		listenHost: listenHost,
 		logger:     logger,
@@ -35,6 +37,7 @@ func NewGateKeeperServer(listenHost string, logger *zap.Logger, ipMax, loginMax,
 		pass:       core.NewCache(passMax, time.Minute, 2*time.Minute),
 		white:      core.NewList(),
 		black:      core.NewList(),
+		grpcServ:   grpc.NewServer(opts...),
 	}
 }
 
@@ -45,20 +48,7 @@ func (s *GateKeeperServer) Start() error {
 		s.logger.Fatal("Can not listen on", zap.String("host:port", s.listenHost), zap.Error(err))
 		return err
 	}
-	var opts []grpc.ServerOption
-	// if *tls {
-	// 	if *certFile == "" {
-	// 		*certFile = testdata.Path("server1.pem")
-	// 	}
-	// 	if *keyFile == "" {
-	// 		*keyFile = testdata.Path("server1.key")
-	// 	}
-	// 	creds, err := credentials.NewServerTLSFromFile(*certFile, *keyFile)
-	// 	if err != nil {
-	// 		log.Fatalf("Failed to generate credentials %v", err)
-	// 	}
-	// 	opts = []grpc.ServerOption{grpc.Creds(creds)}
-	// }
+
 	go func() {
 		ticker := time.NewTicker(1 * time.Minute)
 		for range ticker.C {
@@ -81,14 +71,19 @@ func (s *GateKeeperServer) Start() error {
 		}
 	}()
 
-	grpcServer := grpc.NewServer(opts...)
-	pb.RegisterGateKeeperServer(grpcServer, s)
-	err = grpcServer.Serve(lis)
+	pb.RegisterGateKeeperServer(s.grpcServ, s)
+	err = s.grpcServ.Serve(lis)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+// Stop tries to gracefully stop server
+func (s *GateKeeperServer) Stop() {
+	s.logger.Info("stopping server")
+	s.grpcServ.GracefulStop()
 }
 
 // Check is handler for external request to check ip/login/pass bruteforcing
