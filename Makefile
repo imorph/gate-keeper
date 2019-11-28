@@ -69,3 +69,4 @@ build-container:
 
 push-container:
 		docker push $(DOCKER_IMAGE_NAME):$(VERSION)
+		docker push docker.pkg.github.com/imorph/gate-keeper/$(DOCKER_IMAGE_NAME):$(VERSION)
