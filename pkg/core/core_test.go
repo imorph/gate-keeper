@@ -35,6 +35,21 @@ func TestNonUniqueChecksAllGood(t *testing.T) {
 	standartTry(cache, 0, t)
 }
 
+func TestBruteForceSlowpoke(t *testing.T) {
+	cache := NewCache(10, 60*time.Millisecond, 5*time.Minute)
+	rejected := 0
+	wantRejects := 0
+	for i := 0; i < 100; i++ {
+		if !cache.Check(fmt.Sprintf("key-%d", 1)) {
+			rejected++
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	if rejected != wantRejects {
+		t.Errorf("rejected attempts=%d wantRejects=%d", rejected, wantRejects)
+	}
+}
+
 func TestEmptyHousekeep(t *testing.T) {
 	cache := NewCache(10000, 1*time.Minute, 5*time.Minute)
 	cache.HouseKeep()
