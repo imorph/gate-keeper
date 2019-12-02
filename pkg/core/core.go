@@ -41,8 +41,9 @@ func NewCache(thr int, lt, hkt time.Duration) *LimitersCache {
 func (l *LimitersCache) Check(key string) bool {
 	currTS := time.Now()
 	l.mx.Lock()
+	val, ok := l.lm[key]
 	defer l.mx.Unlock()
-	if val, ok := l.lm[key]; ok {
+	if ok {
 		if currTS.Sub(val.startTS) > l.lifetime {
 			// it is more than a minute since this login/pass/ip was used last time
 			// reseting counter to 1 and setting current ts
@@ -84,8 +85,8 @@ func (l *LimitersCache) Check(key string) bool {
 // Reset will delete (if exist) counter for provided Key returns nothing since delete(map,key) also returns nothing
 func (l *LimitersCache) Reset(key string) {
 	l.mx.Lock()
-	defer l.mx.Unlock()
 	delete(l.lm, key)
+	l.mx.Unlock()
 }
 
 // HouseKeep tries to get list of expired keys (first read-only map scan)
@@ -99,12 +100,12 @@ func (l *LimitersCache) mark() []string {
 	currTS := time.Now()
 	var keysToDelete []string
 	l.mx.RLock()
-	defer l.mx.RUnlock()
 	for key, value := range l.lm {
 		if currTS.Sub(value.startTS) > l.hktime {
 			keysToDelete = append(keysToDelete, key)
 		}
 	}
+	l.mx.RUnlock()
 
 	return keysToDelete
 }
@@ -112,11 +113,11 @@ func (l *LimitersCache) mark() []string {
 func (l *LimitersCache) sweep(keysToDelete []string) {
 	currTS := time.Now()
 	l.mx.Lock()
-	defer l.mx.Unlock()
 	for _, key := range keysToDelete {
-		if currTS.Sub(l.lm[key].startTS) > l.hktime {
+		sts := l.lm[key].startTS
+		if currTS.Sub(sts) > l.hktime {
 			delete(l.lm, key)
 		}
 	}
-
+	l.mx.Unlock()
 }
