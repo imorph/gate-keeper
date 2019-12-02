@@ -8,7 +8,7 @@ import (
 // Limiter is counter with information on last update
 type limiter struct {
 	counter int       // current value of counter
-	lastTS  time.Time // when counter was touched last time (timestamp )
+	startTS time.Time // when counter was touched for the "first" time (1. first attempt ever 2. "bucket" refresh)
 }
 
 // LimitersCache is map of Limiter with mutex
@@ -43,32 +43,38 @@ func (l *LimitersCache) Check(key string) bool {
 	l.mx.Lock()
 	defer l.mx.Unlock()
 	if val, ok := l.lm[key]; ok {
-		if currTS.Sub(val.lastTS) > l.lifetime {
+		if currTS.Sub(val.startTS) > l.lifetime {
 			// it is more than a minute since this login/pass/ip was used last time
 			// reseting counter to 1 and setting current ts
 			l.lm[key] = &limiter{
 				counter: 1,
-				lastTS:  currTS,
+				startTS: currTS,
 			}
 		} else {
 			// it is at least second time this login pass or ip was used in this minute
-			// incrementing counter and set last modification to current TS
+			// incrementing counter and leave modification timestamp intact
 			val.counter++
 			l.lm[key] = &limiter{
 				counter: val.counter,
-				lastTS:  currTS,
+				startTS: val.startTS,
 			}
 			if val.counter > l.threshold {
 				// number of tries exceeded
+				// updating startTS (this is new window)
+				l.lm[key] = &limiter{
+					counter: val.counter,
+					startTS: val.startTS,
+				}
 				return false
 			}
 		}
 	} else {
 		// we did not found this login pass or ip in our map
 		// so lets create it
+		// first attempt and TS of window start
 		l.lm[key] = &limiter{
 			counter: 1,
-			lastTS:  currTS,
+			startTS: currTS,
 		}
 	}
 	// since we are here we did not block anibody
@@ -95,7 +101,7 @@ func (l *LimitersCache) mark() []string {
 	l.mx.RLock()
 	defer l.mx.RUnlock()
 	for key, value := range l.lm {
-		if currTS.Sub(value.lastTS) > l.hktime {
+		if currTS.Sub(value.startTS) > l.hktime {
 			keysToDelete = append(keysToDelete, key)
 		}
 	}
@@ -108,7 +114,7 @@ func (l *LimitersCache) sweep(keysToDelete []string) {
 	l.mx.Lock()
 	defer l.mx.Unlock()
 	for _, key := range keysToDelete {
-		if currTS.Sub(l.lm[key].lastTS) > l.hktime {
+		if currTS.Sub(l.lm[key].startTS) > l.hktime {
 			delete(l.lm, key)
 		}
 	}
