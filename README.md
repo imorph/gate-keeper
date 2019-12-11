@@ -86,3 +86,11 @@ to do e2e benchmark `gkcli simple-bench` inside docker container:
 ```shell
 make docker-bench
 ```
+
+## TODO
+
+* make white/black lists persitent somewere (database)
+* add option to move all state to external DB (foundationDB)
+* add multicore/multi-instance benchmarks
+
+
