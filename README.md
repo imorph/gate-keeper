@@ -93,3 +93,4 @@ make docker-bench
 * add option to move all state to external DB (Redis)
 * add multicore/multi-instance benchmarks
 * send notifications to Kafka topics
+* add prometheus-style metrics
