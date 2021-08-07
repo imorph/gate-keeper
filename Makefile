@@ -59,6 +59,7 @@ install-errcheck:
 check-all: fmt vet lint errcheck golangci-lint
 
 golangci-lint: install-golangci-lint
+		golangci-lint --version
 		golangci-lint run -D errcheck -D structcheck
 
 install-golangci-lint:
