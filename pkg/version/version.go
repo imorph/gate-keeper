@@ -1,7 +1,7 @@
 package version
 
 var appname = "unknown"
-var version = "v1.0.8"
+var version = "v1.0.9"
 
 var revision = "unknown"
 
