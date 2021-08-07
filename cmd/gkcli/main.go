@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"time"
+
 	//"net"
 	"os"
 
@@ -12,6 +13,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/imorph/gate-keeper/pkg/api/gatekeeper"
+	"github.com/imorph/gate-keeper/pkg/version"
 )
 
 func main() {
@@ -235,6 +237,7 @@ func run() error {
 		fmt.Println("Response from server: ", reply.GetOk())
 	case "simple-bench":
 		fmt.Println("Will do simple single-threaded benchmark")
+		fmt.Println("Version:", version.GetVersion(), "Revision:", version.GetRevision())
 		var conn *grpc.ClientConn
 		conn, err := grpc.Dial(cfg.ServerHost, grpc.WithInsecure())
 		if err != nil {
