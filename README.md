@@ -89,8 +89,7 @@ make docker-bench
 
 ## TODO
 
-* make white/black lists persitent somewere (database)
-* add option to move all state to external DB (foundationDB)
+* make white/black lists persitent somewhere (DB? file?)
+* add option to move all state to external DB (Redis)
 * add multicore/multi-instance benchmarks
-
-
+* send notifications to Kafka topics
