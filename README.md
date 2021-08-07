@@ -94,3 +94,4 @@ make docker-bench
 * add multicore/multi-instance benchmarks
 * send notifications to Kafka topics
 * add prometheus-style metrics
+* move containers to Github registry
