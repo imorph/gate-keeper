@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/imorph/gate-keeper/pkg/api/gatekeeper"
 )
@@ -26,7 +27,7 @@ func BenchmarkSimple(b *testing.B) {
 	time.Sleep(time.Second)
 
 	var conn *grpc.ClientConn
-	conn, err := grpc.Dial(host, grpc.WithInsecure())
+	conn, err := grpc.Dial(host, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		b.Error("did not connect:", err)
 	}
@@ -62,7 +63,7 @@ func BenchmarkBanned(b *testing.B) {
 	time.Sleep(time.Second)
 
 	var conn *grpc.ClientConn
-	conn, err := grpc.Dial(host, grpc.WithInsecure())
+	conn, err := grpc.Dial(host, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		b.Error("did not connect:", err)
 	}
@@ -98,7 +99,7 @@ func BenchmarkBlackListed(b *testing.B) {
 	time.Sleep(time.Second)
 
 	var conn *grpc.ClientConn
-	conn, err := grpc.Dial(host, grpc.WithInsecure())
+	conn, err := grpc.Dial(host, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		b.Error("did not connect:", err)
 	}
