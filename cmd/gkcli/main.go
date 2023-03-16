@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/pflag"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/imorph/gate-keeper/pkg/api/gatekeeper"
 	"github.com/imorph/gate-keeper/pkg/version"
@@ -118,7 +119,7 @@ func run() error {
 		// }
 		fmt.Println("Will CHECK login attempt for", "Login:", *checkLogin, "Pass:", *checkPass, "IP:", *checkIP)
 		var conn *grpc.ClientConn
-		conn, err = grpc.Dial(cfg.ServerHost, grpc.WithInsecure())
+		conn, err = grpc.Dial(cfg.ServerHost, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
 			log.Fatalf("did not connect: %s", err)
 		}
@@ -151,7 +152,7 @@ func run() error {
 		// }
 		fmt.Println("Will RESET login attempt counters for", "Login:", *resetLogin, "IP:", *resetIP)
 		var conn *grpc.ClientConn
-		conn, err = grpc.Dial(cfg.ServerHost, grpc.WithInsecure())
+		conn, err = grpc.Dial(cfg.ServerHost, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
 			log.Fatalf("did not connect: %s", err)
 		}
@@ -186,7 +187,7 @@ func run() error {
 		// }
 		fmt.Println("Will include/exclude from WHITE-LIST subnet", "Sub-Network:", *whiteListSubNet, "ADD:", *whiteListAdd)
 		var conn *grpc.ClientConn
-		conn, err = grpc.Dial(cfg.ServerHost, grpc.WithInsecure())
+		conn, err = grpc.Dial(cfg.ServerHost, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
 			log.Fatalf("did not connect: %s", err)
 		}
@@ -219,7 +220,7 @@ func run() error {
 		// }
 		fmt.Println("Will include/exclude from BLACK-LIST subnet", "Sub-Network:", *blackListSubNet, "ADD:", *blackListAdd)
 		var conn *grpc.ClientConn
-		conn, err = grpc.Dial(cfg.ServerHost, grpc.WithInsecure())
+		conn, err = grpc.Dial(cfg.ServerHost, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
 			log.Fatalf("did not connect: %s", err)
 		}
@@ -239,7 +240,7 @@ func run() error {
 		fmt.Println("Will do simple single-threaded benchmark")
 		fmt.Println("Version:", version.GetVersion(), "Revision:", version.GetRevision())
 		var conn *grpc.ClientConn
-		conn, err := grpc.Dial(cfg.ServerHost, grpc.WithInsecure())
+		conn, err := grpc.Dial(cfg.ServerHost, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
 			log.Fatalf("did not connect: %s", err)
 		}
