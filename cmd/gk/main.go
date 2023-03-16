@@ -111,10 +111,10 @@ func run() error {
 	return nil
 }
 
-//
 // zap initialisation logic
 func initZap(logLevel string) (*zap.Logger, error) {
 	level := zap.NewAtomicLevelAt(zapcore.InfoLevel)
+	_ = level // to satisfy staticcheck
 	switch logLevel {
 	case "debug":
 		level = zap.NewAtomicLevelAt(zapcore.DebugLevel)
