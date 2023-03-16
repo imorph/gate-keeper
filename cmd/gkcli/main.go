@@ -5,12 +5,12 @@ import (
 	"log"
 	"time"
 
-	//"net"
 	"os"
 
 	"github.com/spf13/pflag"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/imorph/gate-keeper/pkg/api/gatekeeper"
 	"github.com/imorph/gate-keeper/pkg/version"
@@ -29,24 +29,6 @@ func run() error {
 	var cfg struct {
 		ServerHost string
 	}
-
-	// // command line flags
-	// pfs := pflag.NewFlagSet(version.GetAppName(), pflag.ContinueOnError)
-	// pfs.StringVar(&cfg.ServerHost, "server-host", "127.0.0.1:10001", "ip:port of GATE-KEEPER gRPC server")
-	// versionFlag := pfs.BoolP("version", "v", false, "get version number")
-
-	// // parse flags
-	// err := pfs.Parse(os.Args[1:])
-	// switch {
-	// case err == pflag.ErrHelp:
-	// 	os.Exit(0)
-	// case err != nil:
-	// 	pfs.PrintDefaults()
-	// 	return err
-	// case *versionFlag:
-	// 	fmt.Printf("%s-%s\n", version.GetVersion(), version.GetRevision())
-	// 	os.Exit(0)
-	// }
 
 	defaults := pflag.NewFlagSet("defaults for all commands", pflag.ExitOnError)
 	defaults.StringVar(&cfg.ServerHost, "server-host", "127.0.0.1:10001", "ip:port of GATE-KEEPER gRPC server")
@@ -97,7 +79,7 @@ func run() error {
 		fmt.Println("black-list settings:")
 		cmdBlackList.PrintDefaults()
 		fmt.Println("")
-		os.Exit(2)
+		return fmt.Errorf("no subcomand given")
 	}
 
 	switch os.Args[1] {
@@ -106,21 +88,13 @@ func run() error {
 		if err != nil {
 			return err
 		}
-		//cmdCheck.PrintDefaults()
-		//defaults.PrintDefaults()
-		// _, _, err = net.SplitHostPort(cfg.ServerHost)
-		// if err != nil {
-		// 	log.Fatal(err)
-		// }
-		// ipTMP := net.ParseIP(*checkIP)
-		// if ipTMP == nil {
-		// 	log.Fatal(*checkIP, " is not valid IP")
-		// }
+
 		fmt.Println("Will CHECK login attempt for", "Login:", *checkLogin, "Pass:", *checkPass, "IP:", *checkIP)
 		var conn *grpc.ClientConn
-		conn, err = grpc.Dial(cfg.ServerHost, grpc.WithInsecure())
+		conn, err = grpc.Dial(cfg.ServerHost, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
-			log.Fatalf("did not connect: %s", err)
+			log.Printf("did not connect: %s", err)
+			return err
 		}
 		defer func(conn *grpc.ClientConn) {
 			if err := conn.Close(); err != nil {
@@ -139,21 +113,13 @@ func run() error {
 		if err != nil {
 			return err
 		}
-		//fmt.Println(*cmdReset)
-		//defaults.PrintDefaults()
-		// _, _, err = net.SplitHostPort(cfg.ServerHost)
-		// if err != nil {
-		// 	log.Fatal(err)
-		// }
-		// ipTMP := net.ParseIP(*checkIP)
-		// if ipTMP == nil {
-		// 	log.Fatal(*resetIP, " is not valid IP")
-		// }
+
 		fmt.Println("Will RESET login attempt counters for", "Login:", *resetLogin, "IP:", *resetIP)
 		var conn *grpc.ClientConn
-		conn, err = grpc.Dial(cfg.ServerHost, grpc.WithInsecure())
+		conn, err = grpc.Dial(cfg.ServerHost, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
-			log.Fatalf("did not connect: %s", err)
+			log.Printf("did not connect: %s", err)
+			return err
 		}
 
 		defer func(conn *grpc.ClientConn) {
@@ -174,21 +140,12 @@ func run() error {
 		if err != nil {
 			return err
 		}
-		//cmdWhiteList.PrintDefaults()
-		//defaults.PrintDefaults()
-		// _, _, err = net.SplitHostPort(cfg.ServerHost)
-		// if err != nil {
-		// 	log.Fatal(err)
-		// }
-		// _, _, err = net.ParseCIDR(*whiteListSubNet)
-		// if err != nil {
-		// 	log.Fatal(err)
-		// }
 		fmt.Println("Will include/exclude from WHITE-LIST subnet", "Sub-Network:", *whiteListSubNet, "ADD:", *whiteListAdd)
 		var conn *grpc.ClientConn
-		conn, err = grpc.Dial(cfg.ServerHost, grpc.WithInsecure())
+		conn, err = grpc.Dial(cfg.ServerHost, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
-			log.Fatalf("did not connect: %s", err)
+			log.Printf("did not connect: %s", err)
+			return err
 		}
 		defer func(conn *grpc.ClientConn) {
 			if err := conn.Close(); err != nil {
@@ -207,21 +164,12 @@ func run() error {
 		if err != nil {
 			return err
 		}
-		//cmdBlackList.PrintDefaults()
-		//defaults.PrintDefaults()
-		// _, _, err = net.SplitHostPort(cfg.ServerHost)
-		// if err != nil {
-		// 	log.Fatal(err)
-		// }
-		// _, _, err = net.ParseCIDR(*blackListSubNet)
-		// if err != nil {
-		// 	log.Fatal(err)
-		// }
 		fmt.Println("Will include/exclude from BLACK-LIST subnet", "Sub-Network:", *blackListSubNet, "ADD:", *blackListAdd)
 		var conn *grpc.ClientConn
-		conn, err = grpc.Dial(cfg.ServerHost, grpc.WithInsecure())
+		conn, err = grpc.Dial(cfg.ServerHost, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
-			log.Fatalf("did not connect: %s", err)
+			log.Printf("did not connect: %s", err)
+			return err
 		}
 		defer func(conn *grpc.ClientConn) {
 			if err := conn.Close(); err != nil {
@@ -239,9 +187,10 @@ func run() error {
 		fmt.Println("Will do simple single-threaded benchmark")
 		fmt.Println("Version:", version.GetVersion(), "Revision:", version.GetRevision())
 		var conn *grpc.ClientConn
-		conn, err := grpc.Dial(cfg.ServerHost, grpc.WithInsecure())
+		conn, err := grpc.Dial(cfg.ServerHost, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
-			log.Fatalf("did not connect: %s", err)
+			log.Printf("did not connect: %s", err)
+			return err
 		}
 		defer func(conn *grpc.ClientConn) {
 			if err := conn.Close(); err != nil {
@@ -266,7 +215,6 @@ func run() error {
 			}
 		}
 		fmt.Println(ips*lgs, " requests executed in ", time.Since(start))
-		//fmt.Println("Response from server: ", reply.GetOk())
 	default:
 		fmt.Printf("%q is not valid subcommand.\n", os.Args[1])
 		fmt.Println("")
@@ -290,7 +238,7 @@ func run() error {
 		fmt.Println("simple-bench settings:")
 		cmdBench.PrintDefaults()
 		fmt.Println("")
-		os.Exit(2)
+		return fmt.Errorf("invalid subcommand")
 	}
 
 	return nil
