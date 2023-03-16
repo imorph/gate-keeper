@@ -215,7 +215,6 @@ func run() error {
 			}
 		}
 		fmt.Println(ips*lgs, " requests executed in ", time.Since(start))
-		//fmt.Println("Response from server: ", reply.GetOk())
 	default:
 		fmt.Printf("%q is not valid subcommand.\n", os.Args[1])
 		fmt.Println("")
