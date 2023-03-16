@@ -3,7 +3,7 @@ module github.com/imorph/gate-keeper
 go 1.13
 
 require (
-	github.com/golang/protobuf v1.5.2
+	github.com/golang/protobuf v1.5.3
 	github.com/spf13/pflag v1.0.5
 	github.com/yl2chen/cidranger v1.0.2
 	go.uber.org/atomic v1.9.0 // indirect
