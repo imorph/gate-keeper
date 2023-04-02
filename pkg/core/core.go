@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// Limiter is counter with information on last update
+// limiter is counter with information on last update
 type limiter struct {
 	counter int       // current value of counter
 	startTS time.Time // when counter was touched for the "first" time (1. first attempt ever 2. "bucket" refresh)
