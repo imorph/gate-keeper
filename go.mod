@@ -8,5 +8,5 @@ require (
 	github.com/yl2chen/cidranger v1.0.2
 	go.uber.org/zap v1.25.0
 	golang.org/x/net v0.15.0
-	google.golang.org/grpc v1.58.0
+	google.golang.org/grpc v1.58.1
 )
