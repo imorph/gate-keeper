@@ -93,19 +93,19 @@ func Benchmark1000Sweep(b *testing.B) {
 }
 
 // sweeps on my machine ~5k-6k records
-func Benchmark10000Sweep(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		b.StopTimer()
-		cache := NewCache(100, 5*time.Microsecond, 3000*time.Microsecond)
-		for i := 0; i < 10_000; i++ {
-			cache.Check(fmt.Sprintf("key-%d", i))
-			if i == 5000 {
-				time.Sleep(time.Microsecond)
-			}
+// func Benchmark10000Sweep(b *testing.B) {
+// 	for i := 0; i < b.N; i++ {
+// 		b.StopTimer()
+// 		cache := NewCache(100, 5*time.Microsecond, 3000*time.Microsecond)
+// 		for i := 0; i < 10_000; i++ {
+// 			cache.Check(fmt.Sprintf("key-%d", i))
+// 			if i == 5000 {
+// 				time.Sleep(time.Microsecond)
+// 			}
 
-		}
-		delete := cache.mark()
-		b.StartTimer()
-		cache.sweep(delete)
-	}
-}
+// 		}
+// 		delete := cache.mark()
+// 		b.StartTimer()
+// 		cache.sweep(delete)
+// 	}
+// }

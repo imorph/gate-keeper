@@ -27,7 +27,7 @@ func BenchmarkSimple(b *testing.B) {
 	time.Sleep(time.Second)
 
 	var conn *grpc.ClientConn
-	conn, err := grpc.Dial(host, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(host, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		b.Error("did not connect:", err)
 	}
@@ -63,7 +63,7 @@ func BenchmarkBanned(b *testing.B) {
 	time.Sleep(time.Second)
 
 	var conn *grpc.ClientConn
-	conn, err := grpc.Dial(host, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(host, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		b.Error("did not connect:", err)
 	}
@@ -99,7 +99,7 @@ func BenchmarkBlackListed(b *testing.B) {
 	time.Sleep(time.Second)
 
 	var conn *grpc.ClientConn
-	conn, err := grpc.Dial(host, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(host, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		b.Error("did not connect:", err)
 	}

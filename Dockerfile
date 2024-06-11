@@ -1,4 +1,4 @@
-FROM golang:1.16.7 as builder
+FROM golang:1.22.4 as builder
 
 RUN mkdir -p /gk/
 
@@ -20,7 +20,7 @@ RUN GIT_COMMIT=$(git describe --dirty --always) && \
     -X github.com/imorph/gate-keeper/pkg/version.revision=${GIT_COMMIT}" \
     -a -o bin/gkcli cmd/gkcli/*
 
-FROM alpine:3.14.1
+FROM alpine:3.20.0
 
 RUN addgroup -S app \
     && adduser -S -g app app \

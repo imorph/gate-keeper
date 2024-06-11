@@ -27,7 +27,7 @@ func TestSimpleCheck(t *testing.T) {
 	time.Sleep(time.Second)
 
 	var conn *grpc.ClientConn
-	conn, err := grpc.Dial(host, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(host, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		t.Error("did not connect:", err)
 	}
@@ -64,7 +64,7 @@ func TestBanByPass(t *testing.T) {
 	time.Sleep(time.Second)
 
 	var conn *grpc.ClientConn
-	conn, err := grpc.Dial(host, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(host, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		t.Error("did not connect:", err)
 	}
@@ -112,7 +112,7 @@ func TestBanByBlackList(t *testing.T) {
 	time.Sleep(time.Second)
 
 	var conn *grpc.ClientConn
-	conn, err := grpc.Dial(host, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(host, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		t.Error("did not connect:", err)
 	}
@@ -159,7 +159,7 @@ func TestNoBanByPassWhiteList(t *testing.T) {
 	time.Sleep(time.Second)
 
 	var conn *grpc.ClientConn
-	conn, err := grpc.Dial(host, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(host, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		t.Error("did not connect:", err)
 	}
@@ -215,7 +215,7 @@ func TestBanByPassThenReset(t *testing.T) {
 	time.Sleep(time.Second)
 
 	var conn *grpc.ClientConn
-	conn, err := grpc.Dial(host, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(host, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		t.Error("did not connect:", err)
 	}
