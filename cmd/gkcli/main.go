@@ -91,7 +91,7 @@ func run() error {
 
 		fmt.Println("Will CHECK login attempt for", "Login:", *checkLogin, "Pass:", *checkPass, "IP:", *checkIP)
 		var conn *grpc.ClientConn
-		conn, err = grpc.Dial(cfg.ServerHost, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		conn, err = grpc.NewClient(cfg.ServerHost, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
 			log.Printf("did not connect: %s", err)
 			return err
@@ -116,7 +116,7 @@ func run() error {
 
 		fmt.Println("Will RESET login attempt counters for", "Login:", *resetLogin, "IP:", *resetIP)
 		var conn *grpc.ClientConn
-		conn, err = grpc.Dial(cfg.ServerHost, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		conn, err = grpc.NewClient(cfg.ServerHost, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
 			log.Printf("did not connect: %s", err)
 			return err
@@ -142,7 +142,7 @@ func run() error {
 		}
 		fmt.Println("Will include/exclude from WHITE-LIST subnet", "Sub-Network:", *whiteListSubNet, "ADD:", *whiteListAdd)
 		var conn *grpc.ClientConn
-		conn, err = grpc.Dial(cfg.ServerHost, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		conn, err = grpc.NewClient(cfg.ServerHost, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
 			log.Printf("did not connect: %s", err)
 			return err
@@ -166,7 +166,7 @@ func run() error {
 		}
 		fmt.Println("Will include/exclude from BLACK-LIST subnet", "Sub-Network:", *blackListSubNet, "ADD:", *blackListAdd)
 		var conn *grpc.ClientConn
-		conn, err = grpc.Dial(cfg.ServerHost, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		conn, err = grpc.NewClient(cfg.ServerHost, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
 			log.Printf("did not connect: %s", err)
 			return err
@@ -187,7 +187,7 @@ func run() error {
 		fmt.Println("Will do simple single-threaded benchmark")
 		fmt.Println("Version:", version.GetVersion(), "Revision:", version.GetRevision())
 		var conn *grpc.ClientConn
-		conn, err := grpc.Dial(cfg.ServerHost, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		conn, err := grpc.NewClient(cfg.ServerHost, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
 			log.Printf("did not connect: %s", err)
 			return err
