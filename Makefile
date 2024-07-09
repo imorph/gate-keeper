@@ -47,14 +47,14 @@ lint: install-golint
 		golint cmd/...
 
 install-golint:
-		which golint || GO111MODULE=off go get -u golang.org/x/lint/golint
+		which golint || go install golang.org/x/lint/golint@latest
 
 errcheck: install-errcheck
 		errcheck ./pkg/...
 		errcheck ./cmd/...
 
 install-errcheck:
-		which errcheck || GO111MODULE=off go get -u github.com/kisielk/errcheck
+		which errcheck || go install github.com/kisielk/errcheck@latest
 
 check-all: fmt vet lint errcheck golangci-lint
 
@@ -63,7 +63,7 @@ golangci-lint: install-golangci-lint
 		golangci-lint run -D errcheck -D structcheck
 
 install-golangci-lint:
-		which golangci-lint || GO111MODULE=off go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
+		which golangci-lint || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.59.1
 
 build-container:
 		docker build -t $(DOCKER_IMAGE_NAME):$(VERSION) .

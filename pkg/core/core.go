@@ -42,8 +42,8 @@ func (l *LimitersCache) Check(key string) bool {
 	currTS := time.Now()
 	l.mx.Lock()
 	defer l.mx.Unlock()
-	
-	val, ok := l.lm[key]	
+
+	val, ok := l.lm[key]
 	if ok {
 		if currTS.Sub(val.startTS) > l.lifetime {
 			// it is more than a minute since this login/pass/ip was used last time
