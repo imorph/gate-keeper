@@ -2,11 +2,9 @@ package core
 
 import (
 	"encoding/json"
-	"io/ioutil"
-	"math/rand"
 	"net"
+	"os"
 	"testing"
-	"time"
 )
 
 /*
@@ -63,7 +61,7 @@ var ipV4AWSRangesIPNets []*net.IPNet
 var ipV6AWSRangesIPNets []*net.IPNet
 
 func loadAWSRanges() *AWSRanges {
-	file, err := ioutil.ReadFile("./testdata/aws_ip_ranges.json")
+	file, err := os.ReadFile("./testdata/aws_ip_ranges.json")
 	if err != nil {
 		panic(err)
 	}
@@ -94,5 +92,4 @@ func init() {
 		_, network, _ := net.ParseCIDR(prefix.IPPrefix)
 		ipV4AWSRangesIPNets = append(ipV4AWSRangesIPNets, network)
 	}
-	rand.Seed(time.Now().Unix())
 }
