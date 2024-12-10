@@ -1,7 +1,8 @@
 module github.com/imorph/gate-keeper
 
-go 1.21
-toolchain go1.23.2
+go 1.22
+
+toolchain go1.23.3
 
 require (
 	github.com/golang/protobuf v1.5.4
