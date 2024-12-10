@@ -1,8 +1,8 @@
 module github.com/imorph/gate-keeper
 
-go 1.21
+go 1.22
 
-toolchain go1.23.2
+toolchain go1.23.3
 
 require (
 	github.com/golang/protobuf v1.5.4
@@ -10,7 +10,7 @@ require (
 	github.com/yl2chen/cidranger v1.0.2
 	go.uber.org/zap v1.27.0
 	golang.org/x/net v0.32.0
-	google.golang.org/grpc v1.67.1
+	google.golang.org/grpc v1.68.1
 )
 
 require (
