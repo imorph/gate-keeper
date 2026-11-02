@@ -1,11 +1,11 @@
 package server
 
 import (
+	"context"
 	"testing"
 	"time"
 
 	"go.uber.org/zap"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 

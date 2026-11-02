@@ -23,6 +23,9 @@ gate-keeper is simple anti-bruteforce service with gRPC API
 
 ### Binaries
 
+Requires Go 1.27.3 or newer. CI reads the Go version from `go.mod`; keep the
+Docker builder version aligned when updating it.
+
 ```shell
 make build
 ```
@@ -39,13 +42,19 @@ produces `gk` and `gkcli` in `./bin` directory
 
 ### Code check
 
-VETing/linting/errchecking:
+Check formatting, run `go vet`, golangci-lint (including errcheck), and govulncheck:
 
 ```shell
 make check-all
 ```
 
+The pinned check tools are installed into `bin/tools`. Run `make fmt` to apply
+formatting, or `make vulncheck` to check for reachable known vulnerabilities.
+
 ### Unit tests
+
+Tests include the race detector and local gRPC integration tests; no external
+services are required.
 
 ```shell
 make test
@@ -64,7 +73,7 @@ make build-container
 to build and run latest version in docker:
 
 ```shell
-docker-compose up -d
+docker compose up -d
 ```
 
 to run binaries natively:

@@ -6,33 +6,48 @@ on:
   pull_request:
     branches: [ master ]
 
+permissions:
+  contents: read
+
 jobs:
 
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
     - name: Set up Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@v7
       with:
-        go-version: 1.22
+        go-version-file: go.mod
+
+    - name: Check formatting and module files
+      run: |
+        make fmt-check
+        go mod tidy
+        git diff --exit-code -- go.mod go.sum
 
     - name: Build
-      run: go build -v ./...
+      run: make build
 
     - name: Test
-      run: go test -v ./...
+      run: make test
+
+    - name: Vet
+      run: make vet
+
+    - name: Check vulnerabilities
+      run: make vulncheck
 
   golangci:
     name: lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
-          go-version: '1.22'
-      - uses: actions/checkout@v4
+          go-version-file: go.mod
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v9
         with:
-          version: latest
+          version: v2.15.0

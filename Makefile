@@ -10,6 +10,15 @@ DOCKER_IMAGE_NAME:=$(DOCKER_REPOSITORY)/$(NAME)
 GIT_COMMIT:=$(shell git describe --dirty --always)
 VERSION:=$(shell grep "version = " pkg/version/version.go | awk '{ print $$4 }' | tr -d '"')
 
+GOLANGCI_LINT_VERSION:=v2.15.0
+GOVULNCHECK_VERSION:=v1.9.0
+TOOLS_DIR:=$(CURDIR)/bin/tools
+GOLANGCI_LINT:=$(TOOLS_DIR)/golangci-lint/$(GOLANGCI_LINT_VERSION)/golangci-lint
+GOVULNCHECK:=$(TOOLS_DIR)/govulncheck/$(GOVULNCHECK_VERSION)/govulncheck
+DOCKER_COMPOSE?=docker compose
+
+.PHONY: run test bench docker-bench build release fmt fmt-check vet lint errcheck check-all golangci-lint install-golangci-lint vulncheck build-container push-container
+
 run:
 		GO111MODULE=on go run -ldflags "-s -w -X github.com/imorph/gate-keeper/pkg/version.revision=$(GIT_COMMIT)" cmd/gk/* --log-level=debug
 
@@ -21,9 +30,9 @@ bench:
 		GO111MODULE=on go test -bench=. ./pkg/server/... -benchmem
 
 docker-bench:
-		docker-compose up -d
-		docker exec gate-keeper_gk_1 gkcli simple-bench
-		docker-compose down
+		@set -eu; trap '$(DOCKER_COMPOSE) down' EXIT; \
+		$(DOCKER_COMPOSE) up -d --build; \
+		$(DOCKER_COMPOSE) exec -T gk gkcli simple-bench
 
 build:
 		GO111MODULE=on CGO_ENABLED=0 go build  -ldflags "-s -w -X github.com/imorph/gate-keeper/pkg/version.revision=$(GIT_COMMIT) -X github.com/imorph/gate-keeper/pkg/version.appname=$(NAME)" -a -o ./bin/gk ./cmd/gk/*
@@ -38,32 +47,33 @@ fmt:
 		GO111MODULE=on gofmt -l -w -s ./pkg
 		GO111MODULE=on gofmt -l -w -s ./cmd
 
+fmt-check:
+		@test -z "$$(gofmt -l ./pkg ./cmd)" || { gofmt -l ./pkg ./cmd; exit 1; }
+
 vet:
 		GO111MODULE=on go vet ./pkg/...
 		GO111MODULE=on go vet ./cmd/...
 
-lint: install-golint
-		golint pkg/...
-		golint cmd/...
+lint: golangci-lint
 
-install-golint:
-		which golint || go install golang.org/x/lint/golint@latest
+errcheck: $(GOLANGCI_LINT)
+		$(GOLANGCI_LINT) run --default none --enable errcheck ./...
 
-errcheck: install-errcheck
-		errcheck ./pkg/...
-		errcheck ./cmd/...
+check-all: fmt-check vet lint vulncheck
 
-install-errcheck:
-		which errcheck || go install github.com/kisielk/errcheck@latest
+golangci-lint: $(GOLANGCI_LINT)
+		$(GOLANGCI_LINT) run ./...
 
-check-all: fmt vet lint errcheck golangci-lint
+install-golangci-lint: $(GOLANGCI_LINT)
 
-golangci-lint: install-golangci-lint
-		golangci-lint --version
-		golangci-lint run -D errcheck -D structcheck
+$(GOLANGCI_LINT):
+		GOBIN=$(dir $(GOLANGCI_LINT)) go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
 
-install-golangci-lint:
-		which golangci-lint || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.59.1
+vulncheck: $(GOVULNCHECK)
+		$(GOVULNCHECK) ./...
+
+$(GOVULNCHECK):
+		GOBIN=$(dir $(GOVULNCHECK)) go install golang.org/x/vuln/cmd/govulncheck@$(GOVULNCHECK_VERSION)
 
 build-container:
 		docker build -t $(DOCKER_IMAGE_NAME):$(VERSION) .
